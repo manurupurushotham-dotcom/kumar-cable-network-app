@@ -1,0 +1,5958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a2332">
+  <title>Cable Networks — Customer Management</title>
+  <!-- Firebase (compat) SDK — used for cross-device data storage & real-time sync -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+:root {
+  --bg: #0f1419;
+  --bg-card: #1a2332;
+  --bg-elevated: #243044;
+  --border: #2d3a4f;
+  --text: #e8edf4;
+  --text-muted: #8b9cb3;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary: #64748b;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 12px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --font: "DM Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f1419 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.header-actions .btn {
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btn-logout {
+  background: var(--primary);
+  border: 2px solid var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.btn-logout:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.receipt-summary {
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.receipt-thankyou {
+  color: #ec4899;
+  font-weight: 700;
+}
+
+.receipt-summary strong {
+  color: var(--text);
+}
+
+.receipt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.receipt-reminder-row {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.receipt-reminder-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.receipt-reminder-buttons {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.receipt-reminder-buttons .btn {
+  flex: 1;
+}
+
+.payment-remind-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.payment-remind-row .btn {
+  flex: 1;
+}
+
+.receipt-actions .btn {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  border: 1px solid #25d366;
+  color: #fff;
+  font-weight: 700;
+}
+
+.btn-whatsapp:hover {
+  background: #1fb855;
+}
+
+.receipt-no-phone {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.brand-icon {
+  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.brand-icon-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.brand-icon-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  border: 2px solid var(--bg);
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brand-text {
+  min-width: 0;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tagline {
+  margin: 0.1rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-menu {
+  max-width: 1200px;
+  margin: 0.85rem auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.header-menu[hidden] {
+  display: none;
+}
+
+.menu-btn {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  background: var(--bg-elevated);
+  border-color: var(--secondary);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.btn-icon {
+  padding: 0.5rem 0.7rem;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ===== Search bar ===== */
+.search-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.9rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.85rem 2.5rem 0.85rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.search-clear:hover {
+  color: var(--text);
+}
+
+.search-hint {
+  margin: 0.6rem 0.1rem 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* ===== Main layout ===== */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 6rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.25rem;
+}
+
+/* ===== Summary cards ===== */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stat-card-clickable {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.stat-card-clickable:hover {
+  border-color: var(--warning);
+}
+
+.stat-card-clickable:active {
+  transform: scale(0.98);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.stat-due .stat-value {
+  color: var(--warning);
+}
+
+.stat-monthly-balance .stat-value {
+  color: var(--warning);
+}
+
+.stat-overdue .stat-value {
+  color: var(--danger);
+}
+
+.stat-collected .stat-value {
+  color: var(--success);
+}
+
+.stat-box-on .stat-value {
+  color: var(--success);
+}
+
+.stat-box-off .stat-value {
+  color: #9ca3af;
+}
+
+.stat-overdue-balance .stat-value {
+  color: var(--danger);
+}
+
+/* ===== Table header / controls (shared) ===== */
+.table-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.table-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.record-count {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.collections-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.month-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.collections-summary {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.collections-old-customer-btn {
+  margin-bottom: 1rem;
+}
+
+.collection-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.collection-stat-clickable {
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.collection-stat-clickable:hover .collection-stat-value {
+  text-decoration: underline;
+}
+
+.collection-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.collection-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.collection-stat-overdue {
+  color: var(--danger);
+}
+
+.collection-stat-monthly-balance {
+  color: var(--warning);
+}
+
+.collection-stat-box-on {
+  color: var(--success);
+}
+
+.collection-stat-box-off {
+  color: #9ca3af;
+}
+
+/* ===== Tables ===== */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 640px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table th {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg-elevated);
+}
+
+.total-row td {
+  background: var(--bg-elevated);
+  font-size: 0.95rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+}
+
+.empty-state p {
+  margin: 0 0 0.5rem;
+}
+
+.empty-hint {
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
+/* ===== Search results / customer cards ===== */
+.results-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0.1rem 1rem;
+  flex-wrap: wrap;
+}
+
+.results-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.customer-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.customer-cards-compact {
+  grid-template-columns: 1fr;
+}
+
+.customer-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.customer-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.customer-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.65rem;
+  gap: 0.5rem;
+}
+
+.box-badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.customer-name {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.customer-name-cell {
+  font-weight: 700;
+}
+
+.customer-meta {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0.2rem 0;
+}
+
+.customer-meta span {
+  color: var(--text);
+}
+
+.due-summary {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.due-amount {
+  font-weight: 700;
+  color: var(--warning);
+  font-family: var(--mono);
+}
+
+.due-amount.paid {
+  color: var(--success);
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.card-actions .btn {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.btn-icon-only {
+  flex: 0 0 auto !important;
+  width: 36px;
+  padding: 0.5rem 0 !important;
+  text-align: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.status-unpaid {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.status-paid {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+}
+
+.status-overdue {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+
+.search-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.search-total strong {
+  color: var(--warning);
+  font-family: var(--mono);
+  font-size: 1.1rem;
+}
+
+/* ===== Desktop / mobile toggle (the missing piece) ===== */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* The hidden attribute must always win over the mobile/desktop display
+   rules above and the responsive overrides below — otherwise sections
+   like "All Customers" can stay visible on mobile even after JS sets
+   them hidden, because those rules share the same CSS specificity and
+   come later in the stylesheet. */
+[hidden] {
+  display: none !important;
+}
+
+/* ===== Floating action button ===== */
+.fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+  cursor: pointer;
+  z-index: 30;
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* ===== Modal ===== */
+.modal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: 560px;
+  width: calc(100% - 2rem);
+  border-radius: var(--radius);
+}
+
+.modal-wide {
+  max-width: 860px;
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  color: var(--text);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.65rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card);
+}
+
+/* ===== Forms ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.form-field-full {
+  grid-column: 1 / -1;
+}
+
+.form-field-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.note-hint-box {
+  grid-column: 1 / -1;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.last-paid-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.last-paid-edit-row input {
+  width: 110px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+.last-paid-edit-row .note-hint-text {
+  flex: 1;
+}
+
+.note-hint-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.note-hint-text {
+  font-size: 0.8125rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ===== Mini Calculator (Payment modal) ===== */
+.calc-mini-wrap {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calc-mini {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 280px;
+}
+
+#calcDisplay {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  text-align: right;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+.calc-btn {
+  padding: 0.55rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.calc-btn:active {
+  transform: scale(0.95);
+}
+
+.calc-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--secondary);
+}
+
+.calc-btn-op {
+  color: var(--primary);
+}
+
+.calc-btn-eq {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.calc-btn-eq:hover {
+  background: var(--primary-hover);
+}
+
+/* ===== Recent Pay (Payment modal) ===== */
+.recent-pay-wrap {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recent-pay-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.recent-pay-empty {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.recent-pay-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+
+.recent-pay-row:last-child {
+  border-bottom: none;
+}
+
+.recent-pay-date {
+  color: var(--text-muted);
+  flex: 1 1 auto;
+}
+
+.recent-pay-amount-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.recent-pay-amount-group .mono {
+  font-weight: 700;
+}
+
+.recent-pay-balance {
+  color: var(--warning);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.recent-pay-delete {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  line-height: 1;
+}
+
+.recent-pay-delete:active {
+  transform: scale(0.9);
+}
+
+.recent-pay-note {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.payment-summary {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.payment-summary-2col {
+  grid-template-columns: 1fr;
+}
+
+.payment-display-field {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9375rem;
+}
+
+.payment-display-link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.payment-display-link:hover {
+  border-color: var(--primary);
+}
+
+.payment-summary-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card-alt, var(--bg-card));
+  text-align: center;
+}
+
+.payment-summary-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.payment-summary-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.payment-summary-box-balance .payment-summary-value {
+  color: var(--danger);
+}
+
+.payment-summary-box-total .payment-summary-value {
+  color: var(--primary);
+}
+
+@media (max-width: 480px) {
+  .payment-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.paytm-qr-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.paytm-qr-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.detail-paytm-bar {
+  position: sticky;
+  bottom: var(--footer-h, 0px);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
+
+.act-portal-link {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.act-portal-link:hover {
+  border-color: var(--primary);
+}
+
+.detail-paytm-bar img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  flex-shrink: 0;
+  cursor: zoom-in;
+}
+
+.detail-paytm-bar span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.detail-paytm-bar[hidden] {
+  display: none;
+}
+
+.home-qr-bar {
+  margin-top: 0.85rem;
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.qr-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  border: none;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.qr-lightbox[open] {
+  display: flex;
+}
+
+.qr-lightbox img {
+  max-width: min(90vw, 420px);
+  max-height: 80vh;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.qr-lightbox-close {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9375rem;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.optional {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0.7;
+  font-size: 0.75rem;
+}
+
+.photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.photo-upload {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.photo-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0 0.25rem;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.photo-btn {
+  cursor: pointer;
+}
+
+/* ===== Dynamically-rendered customer cards (built by app.js) ===== */
+.mono {
+  font-family: var(--mono);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-paid {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+}
+
+.badge-due {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+
+.badge-overdue {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+
+.badge-inactive {
+  background: rgba(139, 156, 179, 0.2);
+  color: var(--text-muted);
+}
+
+/* ===== Box ON/OFF toggle switch ===== */
+.box-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 21px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--secondary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 15px;
+  height: 15px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+
+.switch input:checked + .switch-slider {
+  background: var(--success);
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(17px);
+}
+
+.switch input:focus-visible + .switch-slider {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.box-toggle-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 26px;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.card-photo {
+  flex-shrink: 0;
+}
+
+.customer-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.card-list-photo {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.detail-photo {
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.customer-photo-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.card-photo-ph {
+  width: 52px;
+  height: 52px;
+  font-size: 1rem;
+}
+
+.payment-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.payment-photo-ph {
+  width: 96px;
+  height: 96px;
+  font-size: 1.6rem;
+}
+
+.payment-customer-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.payment-customer-preview-name {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card-phone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card-address {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0.1rem 0 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-status-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.card-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+}
+
+.card-toggle-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.card-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-box {
+  margin: 0.2rem 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.card-phone {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.card-phone-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.card-phone:hover {
+  text-decoration: underline;
+}
+
+.card-box-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-box-number {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.card-box-whatsapp {
+  font-size: 0.9rem;
+  line-height: 1;
+  text-decoration: none;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.card-box-number:hover {
+  text-decoration: underline;
+}
+
+.box-number-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.box-number-link:hover {
+  text-decoration: underline;
+}
+
+.card-box-number-off {
+  color: #ec4899 !important;
+  font-weight: 700;
+}
+
+.card-due {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.card-due-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.card-due-amount {
+  font-weight: 700;
+  color: var(--warning);
+}
+
+.card-due-amount-paid {
+  color: var(--success);
+}
+
+.card-due-amount-due {
+  color: #eab308;
+}
+
+.card-due-amount-overdue {
+  color: var(--danger);
+}
+
+.card-details {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.card-label {
+  color: var(--text-muted);
+}
+
+.card-breakdown {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.card-breakdown h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+.breakdown-row:last-child {
+  border-bottom: none;
+}
+
+.breakdown-row-other span:last-child {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.action-group {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Detail modal (populated dynamically) ===== */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem 1.5rem;
+  padding: 1.25rem;
+}
+
+.detail-photo-wrap {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-item.full {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+}
+
+.detail-value.highlight {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--warning);
+}
+
+.detail-breakdown {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.detail-breakdown h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 480px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Print documents (due slips / reports rendered into #printArea) ===== */
+.print-doc {
+  padding: 1.5rem;
+}
+
+.print-doc h1,
+.print-doc h2 {
+  margin: 0 0 0.5rem;
+}
+
+.print-meta {
+  color: #555;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.print-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.print-doc th,
+.print-doc td {
+  border: 1px solid #ccc;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+}
+
+.print-doc th {
+  background: #f0f0f0;
+}
+
+.print-total {
+  font-size: 1rem;
+  font-weight: 700;
+  padding-top: 0.75rem;
+  border-top: 1px solid #ccc;
+}
+
+.print-slip {
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.slip-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+}
+
+.slip-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #333;
+}
+
+/* ===== Print (hidden on screen, shown when printing) ===== */
+.print-area {
+  background: #fff;
+  color: #111;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printArea,
+  #printArea * {
+    visibility: visible;
+  }
+
+  #printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================= */
+
+/* Tablet and below */
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Phone: this is the block that actually switches the app
+   from the desktop table view to the mobile card view */
+@media (max-width: 720px) {
+  .header {
+    padding: 0.85rem 1rem;
+  }
+
+  .brand h1 {
+    font-size: 1rem;
+  }
+
+  .tagline {
+    font-size: 0.7rem;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+  }
+
+  .header-menu {
+    flex-direction: column;
+  }
+
+  .search-bar {
+    padding: 1rem 1rem 0.4rem;
+  }
+
+  .main {
+    padding: 0.85rem 0.85rem 6rem;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .customer-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid {
+    gap: 0.7rem 1rem;
+    padding: 1rem;
+  }
+
+  .detail-value {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .summary-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .modal-footer .btn {
+    flex: 1 1 auto;
+  }
+}
+
+</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+/* ===== Auth screen ===== */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg);
+}
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: var(--shadow);
+}
+.auth-card h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+.auth-card p.auth-sub {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.auth-field {
+  margin-bottom: 0.9rem;
+}
+.auth-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.auth-password-wrap {
+  position: relative;
+  display: flex;
+}
+
+.auth-password-wrap input {
+  flex: 1;
+  padding-right: 2.5rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.05rem;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0.2rem;
+}
+
+.auth-password-toggle:hover {
+  opacity: 1;
+}
+.auth-field input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.auth-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+.auth-error {
+  color: var(--danger);
+  font-size: 0.825rem;
+  margin: 0 0 0.75rem;
+  min-height: 1.1em;
+}
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.auth-toggle {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: center;
+  padding: 0.4rem;
+}
+.auth-loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+/* ===== Page transition: Page 1 (auth) -> Page 2 (main app) ===== */
+/* Force these to behave as two completely separate full-screen pages —
+   never stacked together, never appearing as a "scroll down" to reach
+   the main data. Only one is ever visible at a time. */
+#authScreen[hidden],
+#appRoot[hidden] {
+  display: none !important;
+}
+#authScreen,
+#appRoot {
+  width: 100%;
+  min-height: 100vh;
+  animation: pageIn 0.32s ease both;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+  <div id="authLoading" class="auth-loading">Loading…</div>
+
+  <div id="authScreen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <h2 id="authTitle">Sign in</h2>
+      <p class="auth-sub" id="authSub">Access your account to manage customers.</p>
+      <p class="auth-error" id="authError"></p>
+      <form id="authForm">
+        <div class="auth-field">
+          <label for="authEmail">Username</label>
+          <input type="text" id="authEmail" autocomplete="username" required>
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">Password</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="authPassword" autocomplete="current-password" minlength="6" required>
+            <button type="button" class="auth-password-toggle" id="btnToggleAuthPassword" aria-label="Show password">👁</button>
+          </div>
+        </div>
+        <div class="auth-actions">
+          <button type="submit" class="btn btn-primary" id="authSubmitBtn">Sign In</button>
+          <button type="button" class="auth-toggle" id="authToggleMode">Need an account? Sign up</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="appRoot" hidden>
+  <header class="header">
+    <div class="header-inner">
+      <label class="brand" id="brandLogoLabel">
+        <input type="file" id="fieldBrandLogoFile" accept="image/*" hidden>
+        <div class="brand-icon-wrap">
+          <div class="brand-icon" id="brandIcon">📡</div>
+          <span class="brand-icon-badge">📷</span>
+        </div>
+        <div class="brand-text">
+          <h1 id="brandName">PURUSHOTHAM Cables</h1>
+          <p class="tagline" id="brandTagline">Customer &amp; Box Management</p>
+        </div>
+      </label>
+      <div class="header-actions">
+        <button type="button" class="btn btn-icon btn-outline" id="btnMenuToggle" aria-label="Menu">☰</button>
+        <button type="button" class="btn btn-sm btn-logout" id="btnLogoutHeader">Logout</button>
+      </div>
+    </div>
+    <div class="header-menu" id="headerMenu" hidden>
+      <button type="button" class="btn btn-outline menu-btn" id="btnGoToCollections">📅 Month-wise Collection</button>
+      <button type="button" class="btn btn-outline menu-btn" id="btnOldCustomerBalance">📦 Old Customer Balance</button>
+      <button type="button" class="btn btn-outline menu-btn" id="btnSendReminders">📢 Send Reminders (Balance &gt; ₹500)</button>
+      <button type="button" class="btn btn-outline menu-btn" id="btnNotes">📝 Notes</button>
+      <button type="button" class="btn btn-outline menu-btn" id="btnPrintCollections">Collections PDF</button>
+      <button type="button" class="btn btn-outline menu-btn" id="btnPrivacy">🔒 Privacy</button>
+      <button type="button" class="btn btn-outline menu-btn" id="btnSettings">⚙ Settings</button>
+      <button type="button" class="btn btn-primary menu-btn" id="btnAddCustomer">+ Add Customer</button>
+    </div>
+  </header>
+
+  <section class="search-bar">
+    <div class="search-wrapper">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <input
+        type="search"
+        id="searchInput"
+        class="search-input"
+        placeholder="Search name, box no., phone, address..."
+        autocomplete="off"
+        enterkeyhint="search"
+      >
+      <button type="button" class="search-clear" id="searchClear" hidden aria-label="Clear search">&times;</button>
+    </div>
+    <p class="search-hint" id="searchHint">Type to find a customer</p>
+    <div class="detail-paytm-bar home-qr-bar" id="homeQrBar" hidden></div>
+    <a href="https://digital.actcorp.in/index.php/lco_portal/" target="_blank" rel="noopener" class="act-portal-link">🔗 ACT LCO Portal</a>
+  </section>
+
+  <main class="main">
+    <div id="dashboardSections">
+    <section class="summary-cards" id="summaryCards">
+      <div class="card stat-card">
+        <span class="stat-label">Total Customers</span>
+        <span class="stat-value" id="statCustomers">0</span>
+      </div>
+      <button type="button" class="card stat-card stat-overdue stat-card-clickable" id="statOverdueCard">
+        <span class="stat-label">Overdue Customers</span>
+        <span class="stat-value" id="statOverdue">0</span>
+      </button>
+      <div class="card stat-card stat-monthly-balance">
+        <span class="stat-label">Monthly Balance</span>
+        <span class="stat-value" id="statMonthlyBalance">₹0</span>
+      </div>
+      <button type="button" class="card stat-card stat-overdue-balance stat-card-clickable" id="statOverdueBalanceCard">
+        <span class="stat-label">Overdue Balance</span>
+        <span class="stat-value" id="statOverdueBalance">₹0</span>
+      </button>
+      <button type="button" class="card stat-card stat-box-on stat-card-clickable" id="statBoxOnCard">
+        <span class="stat-label">Box ON</span>
+        <span class="stat-value" id="statBoxOn">0</span>
+      </button>
+      <button type="button" class="card stat-card stat-box-off stat-card-clickable" id="statBoxOffCard">
+        <span class="stat-label">Box OFF</span>
+        <span class="stat-value" id="statBoxOff">0</span>
+      </button>
+      <button type="button" class="card stat-card stat-due stat-card-clickable" id="statTotalDueCard">
+        <span class="stat-label">Total Due Amount</span>
+        <span class="stat-value" id="statTotalDue">₹0</span>
+      </button>
+      <div class="card stat-card stat-collected">
+        <span class="stat-label">Collected This Month</span>
+        <span class="stat-value" id="statCollectedMonth">₹0</span>
+      </div>
+    </section>
+
+    </div>
+
+    <section class="search-results-section" id="searchResultsSection" hidden>
+      <div class="results-header">
+        <h2 id="resultsTitle">Customer Details</h2>
+        <span class="record-count" id="resultsCount"></span>
+      </div>
+      <div class="customer-cards" id="customerCards"></div>
+      <div class="empty-state" id="searchEmptyState" hidden>
+        <p>No customer found for this search.</p>
+        <p class="empty-hint">Try name, box number, phone, or address — letters are not case sensitive.</p>
+      </div>
+      <div class="search-total card" id="searchTotalBar" hidden>
+        <span>Total Due (shown customers)</span>
+        <strong id="searchFilteredTotal">₹0</strong>
+      </div>
+    </section>
+
+    <section class="table-section card desktop-only" id="tableSection">
+      <div class="table-header">
+        <h2>Customer Records</h2>
+        <span class="record-count" id="recordCount">0 records</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="customerTable">
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Box No.</th>
+              <th>Customer Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Monthly Amt</th>
+              <th>Due Date</th>
+              <th>Due Amount</th>
+              <th>Box</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customerTableBody">
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="8"><strong>Total Due (Filtered)</strong></td>
+              <td colspan="3"><strong id="filteredTotal">₹0</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" hidden>
+        <p>No customers found.</p>
+        <button type="button" class="btn btn-primary" id="btnAddFromEmpty">Add First Customer</button>
+      </div>
+    </section>
+
+    <section class="mobile-list-section mobile-only" id="mobileListSection">
+      <div class="table-header">
+        <h2>All Customers</h2>
+        <span class="record-count" id="mobileRecordCount">0</span>
+      </div>
+      <div class="customer-cards customer-cards-compact" id="mobileCustomerCards"></div>
+    </section>
+  </main>
+
+  <button type="button" class="fab mobile-only" id="fabAddCustomer" aria-label="Add customer">+</button>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <dialog class="modal" id="customerModal">
+    <form method="dialog" id="customerForm" class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Customer</h2>
+        <button type="button" class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <input type="hidden" id="customerId">
+      <input type="hidden" id="fieldPhoto">
+      <div class="form-grid">
+        <div class="form-field form-field-full photo-field">
+          <span>Customer Photo <em class="optional">(optional)</em></span>
+          <div class="photo-upload">
+            <div class="photo-preview" id="photoPreview">
+              <span class="photo-placeholder">No photo</span>
+            </div>
+            <div class="photo-actions">
+              <label class="btn btn-sm btn-outline photo-btn">
+                Choose from Gallery
+                <input type="file" id="fieldPhotoFile" accept="image/*" hidden>
+              </label>
+              <label class="btn btn-sm btn-outline photo-btn">
+                Take Photo
+                <input type="file" id="fieldPhotoFileCamera" accept="image/*" capture="environment" hidden>
+              </label>
+              <button type="button" class="btn btn-sm btn-danger" id="btnRemovePhoto" hidden>Remove</button>
+            </div>
+          </div>
+        </div>
+        <label class="form-field">
+          <span>Box Number *</span>
+          <input type="text" id="fieldBoxNumber" required placeholder="e.g. BX-1024">
+        </label>
+        <div class="form-field">
+          <span>Box Status <span class="form-field-hint">— OFF stops the monthly amount from being added to their bill</span></span>
+          <label class="box-toggle">
+            <span class="switch">
+              <input type="checkbox" id="fieldActive" checked>
+              <span class="switch-slider"></span>
+            </span>
+            <span class="box-toggle-label" id="fieldActiveLabel">ON</span>
+          </label>
+        </div>
+        <label class="form-field">
+          <span>Customer Name *</span>
+          <input type="text" id="fieldName" required placeholder="Full name">
+        </label>
+        <label class="form-field">
+          <span>Phone Number</span>
+          <input type="tel" id="fieldPhone" placeholder="10-digit mobile (optional)">
+        </label>
+        <input type="hidden" id="fieldCustomerQr">
+        <div class="form-field form-field-full photo-field">
+          <span>Scanner 1 <em class="optional">(optional)</em></span>
+          <div class="photo-upload">
+            <div class="photo-preview" id="customerQrPreview">
+              <span class="photo-placeholder">No QR code</span>
+            </div>
+            <div class="photo-actions">
+              <label class="btn btn-sm btn-outline photo-btn">
+                Choose from Gallery
+                <input type="file" id="fieldCustomerQrFile" accept="image/*" hidden>
+              </label>
+              <label class="btn btn-sm btn-outline photo-btn">
+                Take Photo
+                <input type="file" id="fieldCustomerQrFileCamera" accept="image/*" capture="environment" hidden>
+              </label>
+              <button type="button" class="btn btn-sm btn-danger" id="btnRemoveCustomerQr" hidden>Remove</button>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="fieldCustomerQr2">
+        <div class="form-field form-field-full photo-field">
+          <span>Scanner 2 <em class="optional">(optional)</em></span>
+          <div class="photo-upload">
+            <div class="photo-preview" id="customerQrPreview2">
+              <span class="photo-placeholder">No QR code</span>
+            </div>
+            <div class="photo-actions">
+              <label class="btn btn-sm btn-outline photo-btn">
+                Choose from Gallery
+                <input type="file" id="fieldCustomerQrFile2" accept="image/*" hidden>
+              </label>
+              <label class="btn btn-sm btn-outline photo-btn">
+                Take Photo
+                <input type="file" id="fieldCustomerQrFileCamera2" accept="image/*" capture="environment" hidden>
+              </label>
+              <button type="button" class="btn btn-sm btn-danger" id="btnRemoveCustomerQr2" hidden>Remove</button>
+            </div>
+          </div>
+        </div>
+        <label class="form-field form-field-full">
+          <span>Address *</span>
+          <textarea id="fieldAddress" required rows="2" placeholder="House no., street, area, city"></textarea>
+        </label>
+        <label class="form-field">
+          <span>Monthly Amount (₹) *</span>
+          <input type="number" id="fieldMonthlyAmount" required min="0" step="1" placeholder="350">
+        </label>
+        <label class="form-field">
+          <span>Due Date (day of month) *</span>
+          <input type="number" id="fieldDueDay" required min="1" max="28" placeholder="5">
+        </label>
+        <label class="form-field">
+          <span>Months Pending * <span class="form-field-hint">— goes up by itself each month the due day passes unpaid; edit only to correct it</span></span>
+          <input type="number" id="fieldMonthsPending" required min="0" step="1" value="1" placeholder="1">
+        </label>
+        <label class="form-field">
+          <span>Last Paid Date</span>
+          <input type="text" id="fieldLastPaid" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY">
+        </label>
+        <label class="form-field">
+          <span>Last Paid Amount (₹)</span>
+          <input type="number" id="fieldLastPaidAmount" min="0" step="1" placeholder="0">
+        </label>
+        <label class="form-field form-field-full">
+          <span>Other Charge (₹) <span class="form-field-hint">— one-time amount, added to due only if you enter it here (does not repeat monthly)</span></span>
+          <input type="number" id="fieldOtherCharge" min="0" step="1" placeholder="0">
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Customer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Detail Modal -->
+  <dialog class="modal" id="detailModal">
+    <div class="modal-content detail-content">
+      <div class="modal-header">
+        <h2>Customer Details</h2>
+        <button type="button" class="modal-close" id="detailClose">&times;</button>
+      </div>
+      <div id="detailBody"></div>
+      <div id="detailPaytmBar" class="detail-paytm-bar" hidden></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnRecordPaymentDetail">Record Payment</button>
+        <button type="button" class="btn btn-outline" id="btnPrintSingle">Due Slip PDF</button>
+        <button type="button" class="btn btn-primary" id="btnMarkPaid">Mark as Paid</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Settings Modal -->
+  <dialog class="modal" id="settingsModal">
+    <form method="dialog" id="settingsForm" class="modal-content">
+      <div class="modal-header">
+        <h2>Company Settings</h2>
+        <button type="button" class="modal-close" id="settingsClose">&times;</button>
+      </div>
+      <div class="form-grid">
+        <label class="form-field form-field-full">
+          <span>Company Name</span>
+          <input type="text" id="fieldCompanyName" required placeholder="Your Cable Network Name">
+        </label>
+        <label class="form-field form-field-full">
+          <span>Tagline</span>
+          <input type="text" id="fieldCompanyTagline" placeholder="Customer & Box Management">
+        </label>
+        <label class="form-field">
+          <span>Icon (emoji)</span>
+          <input type="text" id="fieldCompanyIcon" maxlength="4" placeholder="📡">
+        </label>
+        <label class="form-field form-field-full">
+          <span>Payment Phone Number <em class="optional">(optional)</em></span>
+          <input type="tel" id="fieldCompanyPhone" placeholder="10-digit mobile linked to your QR codes">
+        </label>
+        <div class="form-field form-field-full photo-field">
+          <span>QR Code 1 <em class="optional">(e.g. Paytm)</em></span>
+          <div class="photo-upload">
+            <input type="hidden" id="fieldPaytmQr">
+            <div class="photo-preview" id="paytmQrPreview">
+              <span class="photo-placeholder">No QR code</span>
+            </div>
+            <div class="photo-actions">
+              <label class="btn btn-sm btn-outline photo-btn">
+                Choose from Gallery
+                <input type="file" id="fieldPaytmQrFile" accept="image/*" hidden>
+              </label>
+              <label class="btn btn-sm btn-outline photo-btn">
+                Take Photo
+                <input type="file" id="fieldPaytmQrFileCamera" accept="image/*" capture="environment" hidden>
+              </label>
+              <button type="button" class="btn btn-sm btn-danger" id="btnRemovePaytmQr" hidden>Remove</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-field form-field-full photo-field">
+          <span>QR Code 2 <em class="optional">(e.g. PhonePe / GPay)</em></span>
+          <div class="photo-upload">
+            <input type="hidden" id="fieldPaytmQr2">
+            <div class="photo-preview" id="paytmQrPreview2">
+              <span class="photo-placeholder">No QR code</span>
+            </div>
+            <div class="photo-actions">
+              <label class="btn btn-sm btn-outline photo-btn">
+                Choose from Gallery
+                <input type="file" id="fieldPaytmQrFile2" accept="image/*" hidden>
+              </label>
+              <label class="btn btn-sm btn-outline photo-btn">
+                Take Photo
+                <input type="file" id="fieldPaytmQrFileCamera2" accept="image/*" capture="environment" hidden>
+              </label>
+              <button type="button" class="btn btn-sm btn-danger" id="btnRemovePaytmQr2" hidden>Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-start;">
+        <button type="button" class="btn btn-outline btn-sm" id="btnOpenAccount">🔑 Change Username / Password</button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnSettingsCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Change Username / Password Modal -->
+  <dialog class="modal" id="accountModal">
+    <form method="dialog" id="accountForm" class="modal-content">
+      <div class="modal-header">
+        <h2>Change Username / Password</h2>
+        <button type="button" class="modal-close" id="accountClose">&times;</button>
+      </div>
+      <div class="form-grid">
+        <label class="form-field form-field-full">
+          <span>Current Password *</span>
+          <input type="password" id="fieldCurrentPassword" required placeholder="Enter your current password">
+        </label>
+        <label class="form-field form-field-full">
+          <span>New Username <em class="optional">(leave as-is to keep it)</em></span>
+          <input type="text" id="fieldNewUsername" placeholder="username">
+        </label>
+        <label class="form-field form-field-full">
+          <span>New Password <em class="optional">(leave blank to keep it)</em></span>
+          <input type="password" id="fieldNewPassword" placeholder="At least 6 characters">
+        </label>
+        <p class="auth-error" id="accountError"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnAccountCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="accountSubmitBtn">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Month-wise Amount Collected Modal -->
+  <dialog class="modal modal-wide" id="collectionsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Month-wise Amount Collected</h2>
+        <button type="button" class="modal-close" id="collectionsModalClose">&times;</button>
+      </div>
+      <div style="padding: 1.25rem;">
+        <div class="collections-controls" style="margin-bottom: 1rem;">
+          <select id="collectionMonth" class="month-select" aria-label="Select month"></select>
+          <button type="button" class="btn btn-sm btn-outline" id="btnRecordCollection">+ Record Payment</button>
+        </div>
+        <div class="collections-summary">
+          <div class="collection-stat">
+            <span class="collection-stat-label">Total for selected month</span>
+            <span class="collection-stat-value" id="monthTotalCollected">₹0</span>
+          </div>
+          <div class="collection-stat">
+            <span class="collection-stat-label">Total Balance</span>
+            <span class="collection-stat-value" id="monthTotalBalance">₹0</span>
+          </div>
+          <div class="collection-stat">
+            <span class="collection-stat-label">Payments recorded</span>
+            <span class="collection-stat-value" id="monthPaymentCount">0</span>
+          </div>
+          <div class="collection-stat">
+            <span class="collection-stat-label">Total Customers</span>
+            <span class="collection-stat-value" id="collectionsTotalCustomers">0</span>
+          </div>
+          <button type="button" class="collection-stat collection-stat-clickable" id="collectionsOverdueCard">
+            <span class="collection-stat-label">Overdue Customers</span>
+            <span class="collection-stat-value collection-stat-overdue" id="collectionsOverdueCount">0</span>
+          </button>
+          <div class="collection-stat">
+            <span class="collection-stat-label">Monthly Balance</span>
+            <span class="collection-stat-value collection-stat-monthly-balance" id="collectionsMonthlyBalance">₹0</span>
+          </div>
+          <div class="collection-stat">
+            <span class="collection-stat-label">Overdue Balance</span>
+            <span class="collection-stat-value collection-stat-overdue" id="collectionsOverdueBalance">₹0</span>
+          </div>
+          <div class="collection-stat">
+            <span class="collection-stat-label">Box ON</span>
+            <span class="collection-stat-value collection-stat-box-on" id="collectionsBoxOn">0</span>
+          </div>
+          <button type="button" class="collection-stat collection-stat-clickable" id="collectionsBoxOffCard">
+            <span class="collection-stat-label">Box OFF</span>
+            <span class="collection-stat-value collection-stat-box-off" id="collectionsBoxOff">0</span>
+          </button>
+          <button type="button" class="collection-stat collection-stat-clickable" id="collectionsNotPaidCard">
+            <span class="collection-stat-label">Not Paid This Month</span>
+            <span class="collection-stat-value collection-stat-overdue" id="collectionsNotPaidCount">0</span>
+          </button>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table" id="collectionsTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th id="collectionsMonthColHeader" hidden>Month</th>
+                <th>Box No.</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Balance</th>
+                <th>Note</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="collectionsTableBody"></tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td id="collectionsTotalLabelCell" colspan="3"><strong>Month Total</strong></td>
+                <td><strong id="collectionsTableTotal">₹0</strong></td>
+                <td><strong id="collectionsTableBalanceTotal">₹0</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="empty-state collections-empty" id="collectionsEmpty" hidden>
+          <p>No payments recorded for this month.</p>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Payment Receipt Modal -->
+  <dialog class="modal" id="receiptModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Payment Saved ✅</h2>
+        <button type="button" class="modal-close" id="receiptClose">&times;</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-field-full receipt-summary" id="receiptSummary"></div>
+        <div class="form-field-full receipt-actions" id="receiptActions">
+          <a class="btn btn-whatsapp" id="btnSendWhatsapp" target="_blank" rel="noopener">📱 Send WhatsApp Receipt</a>
+          <a class="btn btn-outline" id="btnSendSms">💬 Send SMS Receipt</a>
+        </div>
+        <p class="receipt-no-phone" id="receiptNoPhone" hidden>This customer has no phone number saved, so a receipt can't be sent. Add one in Edit Customer.</p>
+        <div class="form-field-full receipt-reminder-row" id="receiptReminderRow" hidden>
+          <span class="receipt-reminder-label">Still overdue — send a reminder too:</span>
+          <div class="receipt-reminder-buttons">
+            <button type="button" class="btn btn-sm btn-whatsapp" id="btnReceiptRemindWhatsapp">📱 WhatsApp</button>
+            <button type="button" class="btn btn-sm btn-outline" id="btnReceiptRemindSms">💬 SMS</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btnReceiptDone">Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Notes Modal -->
+  <dialog class="modal" id="notesModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📝 Notes</h2>
+        <button type="button" class="modal-close" id="notesClose">&times;</button>
+      </div>
+      <div class="form-grid">
+        <label class="form-field form-field-full">
+          <span>Write anything you want to remember</span>
+          <textarea id="fieldAppNotes" rows="10" placeholder="Type your notes here..."></textarea>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="notesCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnSaveNotes">Save</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Record Payment Modal -->
+  <dialog class="modal" id="paymentModal">
+    <form method="dialog" id="paymentForm" class="modal-content">
+      <div class="modal-header">
+        <h2>Record Payment</h2>
+        <button type="button" class="modal-close" id="paymentClose">&times;</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-field-full payment-customer-preview" id="paymentCustomerPreview"></div>
+        <label class="form-field form-field-full">
+          <span>Customer *</span>
+          <select id="fieldPaymentCustomer" required></select>
+        </label>
+        <div class="form-field form-field-full">
+          <span>Box Number</span>
+          <div class="payment-display-field payment-display-link" id="paymentBoxNumber" data-copy-box="">—</div>
+        </div>
+        <div class="form-field form-field-full">
+          <span>Phone Number</span>
+          <a href="tel:" class="payment-display-field payment-display-link" id="paymentCustomerPhone">—</a>
+        </div>
+        <div class="detail-paytm-bar" id="paymentQrBar" hidden></div>
+        <a href="https://digital.actcorp.in/index.php/lco_portal/" target="_blank" rel="noopener" class="act-portal-link">🔗 ACT LCO Portal</a>
+        <div class="payment-summary">
+          <div class="payment-summary-box payment-summary-box-balance">
+            <span class="payment-summary-label">Balance</span>
+            <span class="payment-summary-value" id="paymentBalanceAmount">₹0</span>
+          </div>
+          <div class="payment-summary-box">
+            <span class="payment-summary-label">Due Amount</span>
+            <span class="payment-summary-value" id="paymentDueAmount">₹0</span>
+          </div>
+          <div class="payment-summary-box payment-summary-box-total">
+            <span class="payment-summary-label">Total Amount</span>
+            <span class="payment-summary-value" id="paymentTotalAmount">₹0</span>
+          </div>
+        </div>
+        <label class="form-field">
+          <span>Amount (₹) *</span>
+          <input type="number" id="fieldPaymentAmount" required min="1" step="1">
+        </label>
+        <label class="form-field">
+          <span>Payment Date *</span>
+          <input type="text" id="fieldPaymentDate" required inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY">
+        </label>
+        <div class="note-hint-box" id="paymentLastPaidBox">
+          <span class="note-hint-heading">Last Paid</span>
+          <div class="last-paid-edit-row">
+            <input type="text" id="fieldPaymentLastPaidDate" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY">
+            <span class="note-hint-text" id="paymentLastPaidAmount">—</span>
+            <span class="note-hint-text" id="paymentLastPaidBalance">—</span>
+          </div>
+        </div>
+        <div class="form-field-full payment-remind-row" id="paymentRemindRow" hidden>
+          <button type="button" class="btn btn-sm btn-whatsapp" id="btnPaymentRemindWhatsapp">📱 WhatsApp</button>
+          <button type="button" class="btn btn-sm btn-outline" id="btnPaymentRemindSms">💬 SMS</button>
+        </div>
+        <label class="form-field form-field-full">
+          <span>Note *</span>
+          <input type="text" id="fieldPaymentNote" list="paymentNoteHistory" required placeholder="e.g. Cash, UPI, 2 months">
+          <datalist id="paymentNoteHistory"></datalist>
+        </label>
+        <div class="form-field-full calc-mini-wrap">
+          <button type="button" class="btn btn-outline btn-sm" id="btnToggleCalc">🧮 Calculator</button>
+          <div class="calc-mini hidden" id="calcMini">
+            <input type="text" id="calcDisplay" inputmode="decimal" value="0">
+            <div class="calc-grid">
+              <button type="button" class="calc-btn calc-btn-op" data-calc="C">C</button>
+              <button type="button" class="calc-btn calc-btn-op" data-calc="back">⌫</button>
+              <button type="button" class="calc-btn calc-btn-op" data-calc="/">÷</button>
+              <button type="button" class="calc-btn calc-btn-op" data-calc="*">×</button>
+
+              <button type="button" class="calc-btn" data-calc="7">7</button>
+              <button type="button" class="calc-btn" data-calc="8">8</button>
+              <button type="button" class="calc-btn" data-calc="9">9</button>
+              <button type="button" class="calc-btn calc-btn-op" data-calc="-">−</button>
+
+              <button type="button" class="calc-btn" data-calc="4">4</button>
+              <button type="button" class="calc-btn" data-calc="5">5</button>
+              <button type="button" class="calc-btn" data-calc="6">6</button>
+              <button type="button" class="calc-btn calc-btn-op" data-calc="+">+</button>
+
+              <button type="button" class="calc-btn" data-calc="1">1</button>
+              <button type="button" class="calc-btn" data-calc="2">2</button>
+              <button type="button" class="calc-btn" data-calc="3">3</button>
+              <button type="button" class="calc-btn calc-btn-eq" data-calc="=" style="grid-row: span 2;">=</button>
+
+              <button type="button" class="calc-btn" data-calc="0" style="grid-column: span 2;">0</button>
+              <button type="button" class="calc-btn" data-calc=".">.</button>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btnCalcUseAmount">Use as Amount</button>
+          </div>
+        </div>
+        <div class="form-field-full recent-pay-wrap">
+          <button type="button" class="btn btn-outline btn-sm" id="btnToggleRecentPay">🕘 Recent Pay</button>
+          <div class="recent-pay-panel hidden" id="recentPayPanel"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnPaymentCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Payment</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Print Area (hidden) -->
+  <div id="printArea" class="print-area" hidden></div>
+
+  <!-- QR Lightbox (tap QR thumbnail to enlarge) -->
+  <dialog id="qrLightbox" class="qr-lightbox">
+    <img id="qrLightboxImg" src="" alt="Paytm QR code (enlarged)">
+    <button type="button" class="qr-lightbox-close" id="qrLightboxClose" aria-label="Close">&times;</button>
+  </dialog>
+
+  <script>
+// ===== Data storage =====
+// Uses your own Firebase Firestore project, so this file works as a plain
+// standalone HTML file (no Claude.ai required) and stays in sync across
+// every phone/device that signs in with the same account.
+//
+// ---------------------------------------------------------------
+// SETUP: paste your Firebase project's config below. See
+// FIREBASE-SETUP.md for step-by-step instructions to get these values
+// (it takes about 5 minutes and is free).
+// ---------------------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyDkPbIXuFoYM0Mc_g6hpNK_ju-YD0jIUxQ",
+  authDomain: "cable-network-6a29b.firebaseapp.com",
+  projectId: "cable-network-6a29b",
+  storageBucket: "cable-network-6a29b.firebasestorage.app",
+  messagingSenderId: "6260938662",
+  appId: "1:6260938662:web:c9eef0572c5397245be167",
+  measurementId: "G-YVX1VZWG9Q"
+};
+
+let db = null;
+let firebaseReady = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  firebaseReady = true;
+} catch (e) {
+  console.error('Firebase init error:', e);
+}
+
+const APP_DATA_COLLECTION = 'appData';
+
+function requireDb() {
+  if (!firebaseReady || !db) {
+    throw new Error('Firebase is not configured yet. Open FIREBASE-SETUP.md and paste your project config into the firebaseConfig object near the top of the <script> tag.');
+  }
+}
+
+async function hashPassword(pw) {
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function storageGetJSON(key, fallback) {
+  try {
+    requireDb();
+    const doc = await db.collection(APP_DATA_COLLECTION).doc(key).get();
+    return (doc.exists && doc.data().json) ? JSON.parse(doc.data().json) : fallback;
+  } catch (e) {
+    console.error(`Firestore get error (${key}):`, e);
+    return fallback;
+  }
+}
+
+async function storageSetJSON(key, value) {
+  try {
+    requireDb();
+    await db.collection(APP_DATA_COLLECTION).doc(key).set({
+      json: JSON.stringify(value),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.error(`Firestore set error (${key}):`, e);
+    alert('Could not save: ' + e.message);
+  }
+}
+
+
+const defaultSettings = {
+  companyName: 'PURUSHOTHAM Cables',
+  tagline: 'Customer & Box Management',
+  companyIcon: '📡',
+  companyLogo: null,
+  companyPhone: '',
+  paytmQr: null,
+  paytmQr2: null,
+  appNotes: ''
+};
+
+const sampleData = [
+  {
+    id: '1',
+    boxNumber: 'BX-1001',
+    name: 'Ramesh Kumar',
+    phone: '9876543210',
+    address: '12, MG Road, Gandhi Nagar, Chennai - 600001',
+    monthlyAmount: 350,
+    dueDay: 5,
+    monthsPending: 2,
+    lastPaid: '2026-03-05',
+    photo: null,
+    active: true
+  },
+  {
+    id: '2',
+    boxNumber: 'BX-1002',
+    name: 'Priya Sharma',
+    phone: '9123456780',
+    address: '45/A, Anna Salai, T Nagar, Chennai - 600017',
+    monthlyAmount: 450,
+    dueDay: 10,
+    monthsPending: 1,
+    lastPaid: '2026-04-10',
+    photo: null,
+    active: true
+  },
+  {
+    id: '3',
+    boxNumber: 'BX-1003',
+    name: 'Mohammed Ali',
+    phone: '9988776655',
+    address: '78, Mount Road, Royapettah, Chennai - 600014',
+    monthlyAmount: 300,
+    dueDay: 15,
+    monthsPending: 3,
+    lastPaid: '2026-01-15',
+    photo: null,
+    active: true
+  },
+  {
+    id: '4',
+    boxNumber: 'BX-1004',
+    name: 'Lakshmi Devi',
+    phone: '8765432109',
+    address: '23, Velachery Main Road, Chennai - 600042',
+    monthlyAmount: 500,
+    dueDay: 1,
+    monthsPending: 0,
+    lastPaid: '2026-05-01',
+    photo: null,
+    active: true
+  },
+  {
+    id: '5',
+    boxNumber: 'BX-1005',
+    name: 'Suresh Babu',
+    phone: '9012345678',
+    address: '56, Adyar, Chennai - 600020',
+    monthlyAmount: 400,
+    dueDay: 20,
+    monthsPending: 1,
+    lastPaid: '2026-04-20',
+    photo: null,
+    active: true
+  }
+];
+
+const samplePayments = [
+  { id: 'p1', customerId: '4', amount: 500, date: '2026-05-01', note: 'May bill' },
+  { id: 'p2', customerId: '2', amount: 450, date: '2026-04-10', note: 'April bill' },
+  { id: 'p3', customerId: '5', amount: 400, date: '2026-04-20', note: 'April bill' },
+  { id: 'p4', customerId: '1', amount: 350, date: '2026-03-05', note: 'March bill' },
+  { id: 'p5', customerId: '2', amount: 450, date: '2026-03-10', note: 'March bill' },
+  { id: 'p6', customerId: '4', amount: 500, date: '2026-04-01', note: 'April bill' },
+  { id: 'p7', customerId: '1', amount: 350, date: '2026-06-05', note: 'Partial — June' }
+];
+
+let customers = [];
+let payments = [];
+let settings = { ...defaultSettings };
+let selectedCustomerId = null;
+let searchQuery = '';
+let listMode = null; // null | 'topDue' | 'boxOn' | 'boxOff' | 'notPaidMonth' — drives the stat-card drill-down view
+let notPaidMonthTarget = null; // month key used when listMode === 'notPaidMonth'
+let searchFocused = false; // true while the search box has focus, even before typing — hides the All Customers list right away
+let selectedCollectionMonth = '';
+let pendingPhoto = null;
+const PAYMENT_NOTES_KEY = 'mgnCable_paymentNotesByCustomer';
+let paymentNotesByCustomer = {}; // { [customerId]: note } — each customer keeps their own note
+try {
+  paymentNotesByCustomer = JSON.parse(localStorage.getItem(PAYMENT_NOTES_KEY) || '{}');
+} catch (e) {
+  paymentNotesByCustomer = {};
+}
+
+function getLastNoteForCustomer(customerId) {
+  return paymentNotesByCustomer[customerId] || '';
+}
+
+// Updates the note locally (instant, works offline). Used while typing so
+// there's no lag — the durable, cross-device save happens separately via
+// commitLastNoteForCustomer() when the payment is actually saved.
+function setLastNoteForCustomer(customerId, value) {
+  if (!customerId) return;
+  paymentNotesByCustomer[customerId] = value;
+  try {
+    localStorage.setItem(PAYMENT_NOTES_KEY, JSON.stringify(paymentNotesByCustomer));
+  } catch (e) {
+    // localStorage unavailable — falls back to in-memory only for this session
+  }
+}
+
+// Saves the per-customer notes to the account (Firestore), so a note
+// survives forever — across months, browser cache clears, and other
+// devices signed into the same account — not just this one phone.
+async function commitLastNoteForCustomer(customerId, value) {
+  setLastNoteForCustomer(customerId, value);
+  await storageSetJSON(userDocId('paymentNotes'), paymentNotesByCustomer);
+}
+
+async function loadPaymentNotes() {
+  const remote = await storageGetJSON(userDocId('paymentNotes'), null);
+  if (remote && typeof remote === 'object') {
+    // Merge: remote (account-wide) wins per key, but keep any note that
+    // only exists locally (e.g. saved offline and not yet synced).
+    paymentNotesByCustomer = { ...paymentNotesByCustomer, ...remote };
+    try {
+      localStorage.setItem(PAYMENT_NOTES_KEY, JSON.stringify(paymentNotesByCustomer));
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+let pendingPaytmQr = null;
+let pendingPaytmQr2 = null;
+let pendingCustomerQr = null;
+let pendingCustomerQr2 = null;
+
+// Raw JSON strings last seen for each key, used to detect changes made by
+// other devices/tabs during polling, and to avoid redundant re-renders.
+let lastCustomersRaw = null;
+let lastPaymentsRaw = null;
+let lastSettingsRaw = null;
+
+// Each signed-in account gets its own private customers/payments/settings,
+// namespaced by username, so different accounts never see each other's data.
+function userDocId(base) {
+  return currentUser ? `${currentUser}__${base}` : base;
+}
+
+async function loadCustomers() {
+  try {
+    requireDb();
+    const doc = await db.collection(APP_DATA_COLLECTION).doc(userDocId('customers')).get();
+    lastCustomersRaw = (doc.exists && doc.data().json) ? doc.data().json : null;
+  } catch (e) {
+    console.error('loadCustomers error:', e);
+    lastCustomersRaw = null;
+  }
+  customers = lastCustomersRaw ? JSON.parse(lastCustomersRaw) : [];
+}
+
+async function loadPayments() {
+  try {
+    requireDb();
+    const doc = await db.collection(APP_DATA_COLLECTION).doc(userDocId('payments')).get();
+    lastPaymentsRaw = (doc.exists && doc.data().json) ? doc.data().json : null;
+  } catch (e) {
+    console.error('loadPayments error:', e);
+    lastPaymentsRaw = null;
+  }
+  payments = lastPaymentsRaw ? JSON.parse(lastPaymentsRaw) : [];
+}
+
+async function loadSettings() {
+  try {
+    requireDb();
+    const doc = await db.collection(APP_DATA_COLLECTION).doc(userDocId('settings')).get();
+    lastSettingsRaw = (doc.exists && doc.data().json) ? doc.data().json : null;
+  } catch (e) {
+    console.error('loadSettings error:', e);
+    lastSettingsRaw = null;
+  }
+  settings = lastSettingsRaw ? { ...defaultSettings, ...JSON.parse(lastSettingsRaw) } : { ...defaultSettings };
+}
+
+async function saveCustomers() {
+  const raw = JSON.stringify(customers);
+  await storageSetJSON(userDocId('customers'), customers);
+  lastCustomersRaw = raw;
+}
+
+async function savePayments() {
+  const raw = JSON.stringify(payments);
+  await storageSetJSON(userDocId('payments'), payments);
+  lastPaymentsRaw = raw;
+}
+
+async function saveSettings() {
+  const raw = JSON.stringify(settings);
+  await storageSetJSON(userDocId('settings'), settings);
+  lastSettingsRaw = raw;
+  applySettings();
+}
+
+// ===== Cross-device sync (real-time) =====
+// Firestore pushes changes instantly, so instead of polling we attach a
+// live listener to each document. Any phone/device signed into the same
+// account sees edits appear within a second or two — no refresh needed.
+// Listeners are scoped to the signed-in account's own documents.
+let unsubCustomers = null;
+let unsubPayments = null;
+let unsubSettings = null;
+
+function subscribeRealtime() {
+  if (!firebaseReady || unsubCustomers) return;
+
+  unsubCustomers = db.collection(APP_DATA_COLLECTION).doc(userDocId('customers'))
+    .onSnapshot(doc => {
+      const val = (doc.exists && doc.data().json) ? doc.data().json : null;
+      if (val === lastCustomersRaw) return;
+      lastCustomersRaw = val;
+      customers = val ? JSON.parse(val) : [];
+      renderTable();
+      updateSummary();
+    }, e => console.error('customers listener error:', e));
+
+  unsubPayments = db.collection(APP_DATA_COLLECTION).doc(userDocId('payments'))
+    .onSnapshot(doc => {
+      const val = (doc.exists && doc.data().json) ? doc.data().json : null;
+      if (val === lastPaymentsRaw) return;
+      lastPaymentsRaw = val;
+      payments = val ? JSON.parse(val) : [];
+      renderCollections();
+      updateSummary();
+    }, e => console.error('payments listener error:', e));
+
+  unsubSettings = db.collection(APP_DATA_COLLECTION).doc(userDocId('settings'))
+    .onSnapshot(doc => {
+      const val = (doc.exists && doc.data().json) ? doc.data().json : null;
+      if (val === lastSettingsRaw) return;
+      lastSettingsRaw = val;
+      settings = val ? { ...defaultSettings, ...JSON.parse(val) } : { ...defaultSettings };
+      applySettings();
+    }, e => console.error('settings listener error:', e));
+}
+
+function unsubscribeRealtime() {
+  if (unsubCustomers) { unsubCustomers(); unsubCustomers = null; }
+  if (unsubPayments) { unsubPayments(); unsubPayments = null; }
+  if (unsubSettings) { unsubSettings(); unsubSettings = null; }
+}
+
+function applySettings() {
+  document.getElementById('brandName').textContent = settings.companyName;
+  document.getElementById('brandTagline').textContent = settings.tagline;
+  const brandIcon = document.getElementById('brandIcon');
+  brandIcon.innerHTML = settings.companyLogo
+    ? `<img src="${settings.companyLogo}" alt="${escapeHtml(settings.companyName)} logo">`
+    : escapeHtml(settings.companyIcon || '📡');
+  document.title = `${settings.companyName} — Customer Management`;
+  renderHomeQrBar();
+}
+
+function renderHomeQrBar() {
+  const qrBar = document.getElementById('homeQrBar');
+  const qrList = [settings.paytmQr, settings.paytmQr2].filter(Boolean);
+  if (qrList.length > 0) {
+    qrBar.hidden = false;
+    const qrImgs = qrList
+      .map(qr => `<img src="${qr}" alt="Payment QR code" class="detail-paytm-bar-img">`)
+      .join('');
+    const phoneHtml = settings.companyPhone
+      ? ` — <span class="mono">${escapeHtml(settings.companyPhone)}</span>`
+      : '';
+    qrBar.innerHTML = `
+      ${qrImgs}
+      <span>Scan to pay${phoneHtml} — tap QR to enlarge</span>
+    `;
+  } else {
+    qrBar.hidden = true;
+    qrBar.innerHTML = '';
+  }
+}
+
+function getCompanyName() {
+  return settings.companyName || defaultSettings.companyName;
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function formatCurrency(amount) {
+  return '₹' + Number(amount).toLocaleString('en-IN');
+}
+
+function getMonthKey(dateStr) {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+function formatMonthLabel(monthKey) {
+  const [y, m] = monthKey.split('-');
+  const d = new Date(Number(y), Number(m) - 1, 1);
+  return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+}
+
+function getDueAmount(customer) {
+  return typeof customer.balanceDue === 'number' ? customer.balanceDue : customer.monthlyAmount * customer.monthsPending;
+}
+
+// The outstanding balance that came from one-time "Other Charge" entries,
+// tracked separately from the monthly amount so it can be shown as its own
+// row instead of silently blending into the monthly breakdown.
+function getOtherChargeAmount(customer) {
+  return customer.otherChargeAmount || 0;
+}
+
+// The part of the total due that comes purely from monthlyAmount x months
+// pending (i.e. total due minus any outstanding Other Charge).
+function getMonthlyPortionDue(customer) {
+  return Math.max(0, getDueAmount(customer) - getOtherChargeAmount(customer));
+}
+
+function computeMonthsPending(balance, monthlyAmount) {
+  if (!monthlyAmount || monthlyAmount <= 0 || balance <= 0) return 0;
+  return Math.ceil(balance / monthlyAmount);
+}
+
+// The month key (YYYY-MM) of the most recent due date that has already
+// passed, given a customer's due-day-of-month. Used to figure out how many
+// billing cycles have gone by without a manual "Months Pending" edit.
+function getDueRelevantMonthKey(dueDay, referenceDate) {
+  const d = referenceDate || new Date();
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  if (d.getDate() >= dueDay) {
+    return `${y}-${String(m + 1).padStart(2, '0')}`;
+  }
+  const prev = new Date(y, m - 1, 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthKeyDiff(fromKey, toKey) {
+  const [fy, fm] = fromKey.split('-').map(Number);
+  const [ty, tm] = toKey.split('-').map(Number);
+  return (ty - fy) * 12 + (tm - fm);
+}
+
+// Automatically rolls the due amount forward, month by month, for any
+// customer whose due day has passed since we last counted it — so Months
+// Pending (and the Due Amount shown in Pay/Record Payment) climbs on its own
+// without the owner having to open Edit and bump it up every month.
+async function accrueMonthlyDues() {
+  let changed = false;
+  customers.forEach(customer => {
+    if (customer.active === false) return; // Box OFF: don't accrue.
+    const currentKey = getDueRelevantMonthKey(customer.dueDay);
+    if (!customer.lastAccrued) {
+      // First time we've seen this customer under the new auto system —
+      // baseline from now, don't retroactively add anything.
+      customer.lastAccrued = currentKey;
+      changed = true;
+      return;
+    }
+    const diff = monthKeyDiff(customer.lastAccrued, currentKey);
+    if (diff > 0) {
+      // Add only the NEW cycles' worth of monthly amount on top of whatever
+      // was already owed — this keeps any previous/existing balance intact
+      // instead of recalculating the whole due from scratch.
+      const priorMonthlyPortion = getMonthlyPortionDue(customer);
+      customer.monthsPending = (customer.monthsPending || 0) + diff;
+      customer.balanceDue = priorMonthlyPortion + diff * customer.monthlyAmount + (customer.otherChargeAmount || 0);
+      customer.lastAccrued = currentKey;
+      changed = true;
+    }
+  });
+  if (changed) await saveCustomers();
+}
+
+function getNextDueDate(customer) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  let dueDate = new Date(year, month, customer.dueDay);
+
+  if (dueDate < today && customer.monthsPending > 0) {
+    dueDate = new Date(year, month + 1, customer.dueDay);
+  }
+  return dueDate;
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
+// Convert an internal ISO date (YYYY-MM-DD) into the DD-MM-YYYY string shown
+// in the date text fields.
+function isoToDMY(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  if (!y || !m || !d) return '';
+  return `${d}-${m}-${y}`;
+}
+
+// Convert a DD-MM-YYYY string (as typed by the user) back into an internal
+// ISO date (YYYY-MM-DD). Returns null if the text isn't a valid complete date.
+function dmyToISO(dmy) {
+  if (!dmy) return null;
+  const match = dmy.trim().match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (!match) return null;
+  const d = Number(match[1]);
+  const m = Number(match[2]);
+  const y = Number(match[3]);
+  const test = new Date(y, m - 1, d);
+  if (test.getFullYear() !== y || test.getMonth() !== m - 1 || test.getDate() !== d) return null;
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+// Auto-inserts the dashes as the user types digits into a DD-MM-YYYY field.
+function attachDateMask(input) {
+  input.addEventListener('input', () => {
+    let digits = input.value.replace(/\D/g, '').slice(0, 8);
+    let out = digits.slice(0, 2);
+    if (digits.length > 2) out += '-' + digits.slice(2, 4);
+    if (digits.length > 4) out += '-' + digits.slice(4, 8);
+    input.value = out;
+  });
+}
+
+function getStatus(customer) {
+  const due = getDueAmount(customer);
+  if (due > 500) return 'overdue';   // red — overdue balance always wins, box ON or OFF
+  if (customer.active === false) return 'inactive'; // gray — box OFF, no big balance
+  if (due <= 0) return 'paid';       // green — fully paid
+  return 'due';                      // yellow — due amount pending, ₹500 or below
+}
+
+// Whether a customer has an overdue-sized balance (> ₹500), regardless
+// of whether their box is ON or OFF. getStatus() alone won't catch this
+// for OFF customers since it reports 'inactive' first — but a customer
+// with a big balance is still worth surfacing in "Overdue" counts even
+// if their box is off, unless they've been off long enough to be an
+// "Old Customer" (tracked separately).
+function hasOverdueBalance(customer) {
+  return getDueAmount(customer) > 500;
+}
+
+function getStatusLabel(status) {
+  const labels = { paid: 'Paid', due: 'Due', overdue: 'Overdue', inactive: 'Box OFF' };
+  return labels[status] || status;
+}
+
+function getMonthBreakdown(customer) {
+  const breakdown = [];
+  const today = new Date();
+  const monthsCount = customer.monthsPending;
+  const monthly = customer.monthlyAmount;
+  if (monthsCount <= 0 || monthly <= 0) return breakdown;
+
+  const totalDue = getMonthlyPortionDue(customer);
+  const fullMonths = Math.floor(totalDue / monthly);
+  const remainder = totalDue - fullMonths * monthly;
+
+  for (let i = monthsCount; i >= 1; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, customer.dueDay);
+    const isCurrentMonth = i === 1;
+    const amount = (isCurrentMonth && remainder > 0) ? remainder : monthly;
+    breakdown.push({
+      month: d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+      dueDate: formatDate(new Date(d.getFullYear(), d.getMonth(), customer.dueDay)),
+      amount
+    });
+  }
+  return breakdown;
+}
+
+// Returns a row to display for any outstanding Other Charge balance, or
+// null if there isn't one. Kept separate from getMonthBreakdown() so every
+// screen that shows the due breakdown can add this as its own labeled row.
+function getOtherChargeRow(customer) {
+  const amount = getOtherChargeAmount(customer);
+  if (amount <= 0) return null;
+  return { label: customer.otherChargeLabel || 'Other Charges', amount };
+}
+
+function getCustomerById(id) {
+  return customers.find(c => c.id === id);
+}
+
+function getCustomerPhotoHtml(customer, size) {
+  if (customer.photo) {
+    const cls = size === 'payment' ? 'payment-photo' : size === 'detail' ? 'detail-photo' : size === 'list' ? 'card-list-photo' : 'customer-photo';
+    return `<img src="${customer.photo}" alt="" class="${cls}">`;
+  }
+  const initials = customer.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  if (size === 'payment') {
+    return `<div class="customer-photo-placeholder payment-photo-ph">${initials}</div>`;
+  }
+  if (size === 'detail' || size === 'list') {
+    return `<div class="customer-photo-placeholder card-photo-ph">${initials}</div>`;
+  }
+  return `<div class="customer-photo-placeholder">${initials}</div>`;
+}
+
+function normalizeSearchQuery(query) {
+  return query.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+function customerMatchesSearch(customer, query) {
+  const q = normalizeSearchQuery(query);
+  if (!q) return true;
+
+  const qNoSpace = q.replace(/\s/g, '');
+  const name = (customer.name || '').toLowerCase();
+  const box = (customer.boxNumber || '').toLowerCase();
+  const address = (customer.address || '').toLowerCase();
+  const phone = normalizePhone(customer.phone);
+  const qDigits = q.replace(/\D/g, '');
+
+  return (
+    name.includes(q) ||
+    box.includes(q) ||
+    box.replace(/\s/g, '').includes(qNoSpace) ||
+    address.includes(q) ||
+    (qDigits.length >= 3 && phone.includes(qDigits)) ||
+    phone.includes(qNoSpace)
+  );
+}
+
+// A customer whose box has been OFF since a previous calendar month (not
+// this month). These are excluded from the main page — they only show
+// up in "Old Customer Balance" — since they're effectively archived.
+function isOldOffCustomer(customer) {
+  if (customer.active !== false) return false;
+  if (!customer.offSince) return true; // off before we started tracking offSince — treat as old
+  const offDate = new Date(customer.offSince);
+  const now = new Date();
+  return offDate.getFullYear() !== now.getFullYear() || offDate.getMonth() !== now.getMonth();
+}
+
+function filterCustomers(query) {
+  const mainPageCustomers = customers.filter(c => !isOldOffCustomer(c));
+
+  if (listMode === 'topDue') {
+    return mainPageCustomers
+      .filter(c => getDueAmount(c) > 0)
+      .sort((a, b) => getDueAmount(b) - getDueAmount(a));
+  }
+  if (listMode === 'boxOn') {
+    return getCustomersAlphabetical().filter(c => c.active !== false);
+  }
+  if (listMode === 'boxOff') {
+    return getCustomersAlphabetical().filter(c => c.active === false);
+  }
+  if (listMode === 'overdueBalance') {
+    return mainPageCustomers
+      .filter(c => hasOverdueBalance(c))
+      .sort((a, b) => getDueAmount(b) - getDueAmount(a));
+  }
+  if (listMode === 'sendReminders') {
+    return mainPageCustomers
+      .filter(c => hasOverdueBalance(c) && !wasRemindedThisMonth(c))
+      .sort((a, b) => getDueAmount(b) - getDueAmount(a));
+  }
+  if (listMode === 'oldCustomerBalance') {
+    return customers
+      .filter(c => isOldOffCustomer(c) && getDueAmount(c) > 0)
+      .sort((a, b) => new Date(a.offSince || 0) - new Date(b.offSince || 0));
+  }
+  if (listMode === 'notPaidMonth') {
+    return getCustomersAlphabetical()
+      .filter(c => c.active !== false && getDueAmount(c) > 0)
+      .sort((a, b) => getDueAmount(b) - getDueAmount(a));
+  }
+  if (!normalizeSearchQuery(query)) return searchFocused ? [] : mainPageCustomers;
+  return customers.filter(c => customerMatchesSearch(c, query));
+}
+
+function isSearchActive() {
+  return listMode !== null || searchFocused || normalizeSearchQuery(searchQuery).length > 0;
+}
+
+function showListMode(mode) {
+  listMode = mode;
+  searchQuery = '';
+  searchFocused = false;
+  const searchInput = document.getElementById('searchInput');
+  searchInput.value = '';
+  searchInput.blur();
+  document.getElementById('searchClear').hidden = false;
+  renderTable();
+  document.getElementById('searchResultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateSearchLayout(filtered) {
+  const searching = isSearchActive();
+  const dashboard = document.getElementById('dashboardSections');
+  const searchSection = document.getElementById('searchResultsSection');
+  const tableSection = document.getElementById('tableSection');
+  const mobileList = document.getElementById('mobileListSection');
+  const hint = document.getElementById('searchHint');
+
+  dashboard.hidden = searching;
+  searchSection.hidden = !searching;
+  tableSection.hidden = searching;
+  mobileList.hidden = searching;
+
+  if (searching) {
+    if (!normalizeSearchQuery(searchQuery)) {
+      hint.textContent = 'Type a name, box number, or phone to search';
+    } else {
+      hint.textContent = filtered.length
+        ? `Found ${filtered.length} customer${filtered.length !== 1 ? 's' : ''}`
+        : 'No match — try another name, box, or phone';
+    }
+  } else {
+    hint.textContent = `${customers.length} customers — search to view details`;
+  }
+}
+
+function buildCustomerCardHtml(customer, expanded) {
+  const due = getDueAmount(customer);
+  const status = getStatus(customer);
+  const nextDue = getNextDueDate(customer);
+  const breakdown = expanded ? getMonthBreakdown(customer) : [];
+
+  let breakdownHtml = '';
+  const cardOtherRow = expanded ? getOtherChargeRow(customer) : null;
+  if (expanded && (breakdown.length > 0 || cardOtherRow)) {
+    breakdownHtml = `
+      <div class="card-breakdown">
+        <h4>Due Breakdown</h4>
+        ${breakdown.map(row => `
+          <div class="breakdown-row">
+            <span>${row.month}</span>
+            <span class="mono">${formatCurrency(row.amount)}</span>
+          </div>
+        `).join('')}
+        ${cardOtherRow ? `
+          <div class="breakdown-row breakdown-row-other">
+            <span>${escapeHtml(cardOtherRow.label)}</span>
+            <span class="mono">${formatCurrency(cardOtherRow.amount)}</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  const detailRows = expanded ? `
+    <div class="card-details">
+      <div class="card-row"><span class="card-label">Monthly</span><span class="mono">${formatCurrency(customer.monthlyAmount)}</span></div>
+      <div class="card-row"><span class="card-label">Due day</span><span>${customer.dueDay}${ordinal(customer.dueDay)} of month</span></div>
+      <div class="card-row"><span class="card-label">Next due</span><span>${formatDate(nextDue)}</span></div>
+      <div class="card-row"><span class="card-label">Months pending</span><span>${customer.monthsPending}</span></div>
+      <div class="card-row"><span class="card-label">Last paid</span><span>${customer.lastPaid ? formatDate(new Date(customer.lastPaid)) : '—'}</span></div>
+    </div>
+    ${breakdownHtml}
+  ` : '';
+
+  return `
+    <article class="customer-card card ${expanded ? 'customer-card-expanded' : 'customer-card-compact'}" data-customer-id="${customer.id}">
+      <div class="card-top">
+        <div class="card-photo">${getCustomerPhotoHtml(customer, expanded ? 'detail' : 'list')}</div>
+        <div class="card-info">
+          <div class="card-name-row">
+            <h3 class="card-name">${escapeHtml(customer.name)}</h3>
+            <span class="badge badge-${status}">${getStatusLabel(status)}</span>
+          </div>
+          <span class="card-address">${escapeHtml(customer.address)}</span>
+          <div class="card-phone-row">
+            ${customer.phone ? `<a href="tel:${escapeHtml(customer.phone)}" class="card-phone mono">${escapeHtml(customer.phone)}</a>` : '<span class="card-phone mono card-phone-empty">No phone</span>'}
+            <label class="switch" title="Box ON/OFF">
+              <input type="checkbox" data-toggle-active="${customer.id}" ${customer.active !== false ? 'checked' : ''}>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <span class="card-box-number mono${customer.active === false ? ' card-box-number-off' : ''}" data-copy-box="${escapeHtml(customer.boxNumber)}">Box: ${escapeHtml(customer.boxNumber)}</span>
+        </div>
+        <div class="card-due">
+          <span class="card-due-label">Due</span>
+          <span class="card-due-amount mono card-due-amount-${status}">${due > 0 ? formatCurrency(due) : 'Paid'}</span>
+        </div>
+      </div>
+      ${detailRows}
+      <div class="card-actions">
+        ${expanded ? '' : `<button type="button" class="btn btn-sm btn-outline btn-block" data-view="${customer.id}">View Full Details</button>`}
+        <button type="button" class="btn btn-sm btn-outline" data-edit="${customer.id}">Edit</button>
+        <button type="button" class="btn btn-sm btn-outline" data-pay="${customer.id}">Pay</button>
+        ${listMode === 'sendReminders' && customer.phone ? `<button type="button" class="btn btn-sm btn-whatsapp btn-icon-only" data-remind-whatsapp="${customer.id}" title="Send WhatsApp reminder">📱</button>` : ''}
+        <button type="button" class="btn btn-sm btn-outline" data-print="${customer.id}">Print</button>
+        <button type="button" class="btn btn-sm btn-danger" data-delete="${customer.id}">Del</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderCustomerCards(filtered) {
+  const container = document.getElementById('customerCards');
+  const empty = document.getElementById('searchEmptyState');
+  const totalBar = document.getElementById('searchTotalBar');
+  const expanded = listMode === null;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    empty.hidden = false;
+    empty.innerHTML = normalizeSearchQuery(searchQuery)
+      ? '<p>No customer found for this search.</p><p class="empty-hint">Try name, box number, phone, or address — letters are not case sensitive.</p>'
+      : '<p>Type a name, box number, or phone to search.</p>';
+    totalBar.hidden = true;
+    document.getElementById('resultsCount').textContent = '0 found';
+    return;
+  }
+
+  empty.hidden = true;
+  totalBar.hidden = false;
+  document.getElementById('resultsCount').textContent = `${filtered.length} found`;
+  const listModeTitles = {
+    topDue: 'Highest Due Amounts',
+    boxOn: 'Box ON Customers',
+    boxOff: 'Box OFF Customers',
+    overdueBalance: 'Overdue Balance Customers',
+    sendReminders: 'Send Reminders — Overdue Customers',
+    oldCustomerBalance: 'Old Customer Balance (Box OFF 2+ months)',
+    notPaidMonth: 'Not Paid — Pending Balance'
+  };
+  document.getElementById('resultsTitle').textContent = listModeTitles[listMode]
+    || (filtered.length === 1 ? 'Customer Details' : 'Matching Customers');
+
+  container.innerHTML = filtered.map(c => buildCustomerCardHtml(c, expanded)).join('');
+
+  const total = filtered.reduce((sum, c) => sum + getDueAmount(c), 0);
+  document.getElementById('searchFilteredTotal').textContent = formatCurrency(total);
+}
+
+function getCustomersAlphabetical() {
+  return customers.filter(c => !isOldOffCustomer(c)).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function renderMobileList() {
+  const container = document.getElementById('mobileCustomerCards');
+  const sorted = getCustomersAlphabetical();
+  container.innerHTML = sorted.map(c => buildCustomerCardHtml(c, false)).join('');
+  document.getElementById('mobileRecordCount').textContent = `${sorted.length} customers`;
+}
+
+function getPaymentsForMonth(monthKey) {
+  return payments
+    .filter(p => getMonthKey(p.date) === monthKey)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function getMonthTotal(monthKey) {
+  return getPaymentsForMonth(monthKey).reduce((sum, p) => sum + p.amount, 0);
+}
+
+function getCurrentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function buildMonthOptions() {
+  const select = document.getElementById('collectionMonth');
+  const monthKeys = new Set(payments.map(p => getMonthKey(p.date)));
+  monthKeys.add(getCurrentMonthKey());
+  if (selectedCollectionMonth && selectedCollectionMonth !== 'all') monthKeys.add(selectedCollectionMonth);
+
+  const sorted = [...monthKeys].sort((a, b) => b.localeCompare(a));
+
+  const options = [`<option value="all"${selectedCollectionMonth === 'all' ? ' selected' : ''}>All Months</option>`]
+    .concat(sorted.map(key =>
+      `<option value="${key}"${key === selectedCollectionMonth ? ' selected' : ''}>${formatMonthLabel(key)}</option>`
+    ));
+
+  select.innerHTML = options.join('');
+}
+
+function renderCollections() {
+  buildMonthOptions();
+  const showingAll = selectedCollectionMonth === 'all';
+  const monthPayments = showingAll
+    ? payments.slice().sort((a, b) => new Date(b.date) - new Date(a.date))
+    : getPaymentsForMonth(selectedCollectionMonth);
+  const tbody = document.getElementById('collectionsTableBody');
+  const table = document.getElementById('collectionsTable');
+  const empty = document.getElementById('collectionsEmpty');
+  const total = showingAll
+    ? monthPayments.reduce((sum, p) => sum + p.amount, 0)
+    : getMonthTotal(selectedCollectionMonth);
+
+  document.getElementById('collectionsMonthColHeader').hidden = !showingAll;
+  document.getElementById('collectionsTotalLabelCell').colSpan = showingAll ? 4 : 3;
+
+  tbody.innerHTML = '';
+
+  if (monthPayments.length === 0) {
+    table.hidden = true;
+    empty.hidden = false;
+  } else {
+    table.hidden = false;
+    empty.hidden = true;
+
+    monthPayments.forEach(payment => {
+      const customer = getCustomerById(payment.customerId);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${formatDate(new Date(payment.date))}</td>
+        ${showingAll ? `<td>${formatMonthLabel(getMonthKey(payment.date))}</td>` : ''}
+        <td class="mono">${customer ? escapeHtml(customer.boxNumber) : '—'}</td>
+        <td>${customer ? escapeHtml(customer.name) : 'Unknown'}</td>
+        <td class="mono">${formatCurrency(payment.amount)}</td>
+        <td class="mono">${customer ? formatCurrency(getDueAmount(customer)) : '—'}</td>
+        <td>${escapeHtml(payment.note || '—')}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-danger" data-delete-payment="${payment.id}">Del</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const boxCounts = getBoxOnOffCountForMonth(showingAll ? getCurrentMonthKey() : selectedCollectionMonth);
+  const endOfMonth = showingAll ? null : getEndOfMonth(selectedCollectionMonth);
+
+  let totalBalance = 0;
+  let monthlyBalance = 0;
+  let overdueCount = 0;
+  let overdueBalance = 0;
+
+  customers.forEach(customer => {
+    const paymentsAfter = endOfMonth
+      ? payments
+          .filter(p => p.customerId === customer.id && new Date(p.date) > endOfMonth)
+          .reduce((s, p) => s + p.amount, 0)
+      : 0;
+    const estBalance = getDueAmount(customer) + paymentsAfter;
+    const estMonthlyBalance = getMonthlyPortionDue(customer) + paymentsAfter;
+
+    totalBalance += estBalance;
+    monthlyBalance += estMonthlyBalance;
+    if (estBalance > 500) {
+      overdueCount++;
+      overdueBalance += estBalance;
+    }
+  });
+
+  const notPaidCount = customers.filter(c => c.active !== false && getDueAmount(c) > 0).length;
+
+  document.getElementById('monthTotalCollected').textContent = formatCurrency(total);
+  document.getElementById('monthTotalBalance').textContent = formatCurrency(totalBalance);
+  document.getElementById('monthPaymentCount').textContent = monthPayments.length;
+  document.getElementById('collectionsTotalCustomers').textContent = customers.length;
+  document.getElementById('collectionsOverdueCount').textContent = overdueCount;
+  document.getElementById('collectionsMonthlyBalance').textContent = formatCurrency(monthlyBalance);
+  document.getElementById('collectionsOverdueBalance').textContent = formatCurrency(overdueBalance);
+  document.getElementById('collectionsNotPaidCount').textContent = notPaidCount;
+  document.getElementById('collectionsBoxOn').textContent = boxCounts.on;
+  document.getElementById('collectionsBoxOff').textContent = boxCounts.off;
+  document.getElementById('collectionsTableTotal').textContent = formatCurrency(total);
+  const uniqueCustomerIds = new Set(monthPayments.map(p => p.customerId));
+  const balanceTotal = [...uniqueCustomerIds].reduce((sum, cid) => {
+    const c = getCustomerById(cid);
+    return sum + (c ? getDueAmount(c) : 0);
+  }, 0);
+  document.getElementById('collectionsTableBalanceTotal').textContent = formatCurrency(balanceTotal);
+  document.getElementById('statCollectedMonth').textContent = formatCurrency(getMonthTotal(getCurrentMonthKey()));
+}
+
+function getEndOfMonth(monthKey) {
+  const [y, m] = monthKey.split('-').map(Number);
+  return new Date(y, m, 0, 23, 59, 59);
+}
+
+// Best-effort Box ON/OFF count for a given month. We only know each
+// customer's CURRENT status and the date their box was last switched OFF
+// (offSince) — there's no full history of every toggle. So: a customer
+// counts as OFF for a month if they're off now and were already off by
+// the end of that month; otherwise they count as ON. This is accurate
+// for the current month and for anyone who hasn't been toggled back and
+// forth since — it can't reconstruct multiple on/off cycles before that.
+function getBoxOnOffCountForMonth(monthKey) {
+  const [y, m] = monthKey.split('-').map(Number);
+  const endOfMonth = new Date(y, m, 0, 23, 59, 59);
+  let on = 0;
+  let off = 0;
+
+  customers.forEach(c => {
+    const wasOffByThen = c.active === false && (!c.offSince || new Date(c.offSince) <= endOfMonth);
+    if (wasOffByThen) {
+      off++;
+    } else {
+      on++;
+    }
+  });
+
+  return { on, off };
+}
+
+function renderTable() {
+  const filtered = filterCustomers(searchQuery);
+  const searching = isSearchActive();
+
+  updateSearchLayout(filtered);
+
+  if (searching) {
+    renderCustomerCards(filtered);
+  } else {
+    renderMobileList();
+  }
+
+  const tbody = document.getElementById('customerTableBody');
+  const emptyState = document.getElementById('emptyState');
+  const table = document.getElementById('customerTable');
+  const displayList = searching ? filtered : getCustomersAlphabetical();
+
+  tbody.innerHTML = '';
+
+  if (displayList.length === 0) {
+    table.hidden = true;
+    emptyState.hidden = false;
+  } else if (!searching) {
+    table.hidden = false;
+    emptyState.hidden = true;
+
+    displayList.forEach(customer => {
+      const due = getDueAmount(customer);
+      const status = getStatus(customer);
+      const nextDue = getNextDueDate(customer);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${getCustomerPhotoHtml(customer)}</td>
+        <td class="mono${customer.active === false ? ' card-box-number-off' : ''}"><span class="box-number-link" data-copy-box="${escapeHtml(customer.boxNumber)}">${escapeHtml(customer.boxNumber)}</span></td>
+        <td class="customer-name-cell">${escapeHtml(customer.name)}</td>
+        <td class="mono">${escapeHtml(customer.phone)}</td>
+        <td>${escapeHtml(truncate(customer.address, 40))}</td>
+        <td class="mono">${formatCurrency(customer.monthlyAmount)}</td>
+        <td>${customer.dueDay}${ordinal(customer.dueDay)} / ${formatDate(nextDue)}</td>
+        <td class="mono card-due-amount-${status}">${due > 0 ? formatCurrency(due) : '—'}</td>
+        <td>
+          <label class="switch">
+            <input type="checkbox" data-toggle-active="${customer.id}" ${customer.active !== false ? 'checked' : ''}>
+            <span class="switch-slider"></span>
+          </label>
+        </td>
+        <td><span class="badge badge-${status}">${getStatusLabel(status)}</span></td>
+        <td>
+          <div class="action-group">
+            <button type="button" class="btn btn-sm btn-outline" data-view="${customer.id}">View</button>
+            <button type="button" class="btn btn-sm btn-outline" data-edit="${customer.id}">Edit</button>
+            <button type="button" class="btn btn-sm btn-outline" data-pay="${customer.id}">Pay</button>
+            <button type="button" class="btn btn-sm btn-danger" data-delete="${customer.id}">Del</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const filteredTotal = displayList.reduce((sum, c) => sum + getDueAmount(c), 0);
+  document.getElementById('filteredTotal').textContent = formatCurrency(filteredTotal);
+  document.getElementById('recordCount').textContent = `${displayList.length} record${displayList.length !== 1 ? 's' : ''}`;
+
+  updateSummary();
+  if (searching) {
+    updateSearchHint(filtered.length);
+  } else {
+    updateSearchHint(customers.length);
+  }
+}
+
+function updateSummary() {
+  const mainPageCustomers = customers.filter(c => !isOldOffCustomer(c));
+  const totalDue = mainPageCustomers.reduce((sum, c) => sum + getDueAmount(c), 0);
+  const monthlyBalance = mainPageCustomers.reduce((sum, c) => sum + getMonthlyPortionDue(c), 0);
+  const overdueCustomers = mainPageCustomers.filter(c => hasOverdueBalance(c));
+  const overdueCount = overdueCustomers.length;
+  const overdueBalance = overdueCustomers.reduce((sum, c) => sum + getDueAmount(c), 0);
+  const boxOnCount = mainPageCustomers.filter(c => c.active !== false).length;
+  const boxOffCount = mainPageCustomers.filter(c => c.active === false).length;
+
+  document.getElementById('statCustomers').textContent = mainPageCustomers.length;
+  document.getElementById('statTotalDue').textContent = formatCurrency(totalDue);
+  document.getElementById('statMonthlyBalance').textContent = formatCurrency(monthlyBalance);
+  document.getElementById('statOverdue').textContent = overdueCount;
+  document.getElementById('statCollectedMonth').textContent = formatCurrency(getMonthTotal(getCurrentMonthKey()));
+  document.getElementById('statBoxOn').textContent = boxOnCount;
+  document.getElementById('statBoxOff').textContent = boxOffCount;
+  document.getElementById('statOverdueBalance').textContent = formatCurrency(overdueBalance);
+}
+
+function updateSearchHint(count) {
+  const hint = document.getElementById('searchHint');
+  if (isSearchActive()) {
+    hint.textContent = count
+      ? `Found ${count} customer${count !== 1 ? 's' : ''} — showing details only`
+      : 'No match — search is not case sensitive';
+  } else {
+    hint.textContent = `${customers.length} customers — type name, box, phone or address`;
+  }
+}
+
+function handleCardActions(e) {
+  const viewBtn = e.target.closest('[data-view]');
+  const editBtn = e.target.closest('[data-edit]');
+  const deleteBtn = e.target.closest('[data-delete]');
+  const payBtn = e.target.closest('[data-pay]');
+  const printBtn = e.target.closest('[data-print]');
+  const remindWhatsappBtn = e.target.closest('[data-remind-whatsapp]');
+  const remindSmsBtn = e.target.closest('[data-remind-sms]');
+  const toggleActive = e.target.closest('[data-toggle-active]');
+
+  if (viewBtn) openDetailModal(viewBtn.dataset.view);
+  if (editBtn) openEditModal(editBtn.dataset.edit);
+  if (deleteBtn) deleteCustomer(deleteBtn.dataset.delete);
+  if (payBtn) openPaymentModal(payBtn.dataset.pay);
+  if (printBtn) {
+    selectedCustomerId = printBtn.dataset.print;
+    printSingleDue();
+  }
+  if (remindWhatsappBtn) sendOverdueReminder(remindWhatsappBtn.dataset.remindWhatsapp, 'whatsapp');
+  if (remindSmsBtn) sendOverdueReminder(remindSmsBtn.dataset.remindSms, 'sms');
+  if (toggleActive) {
+    e.stopPropagation();
+    toggleCustomerActive(toggleActive.dataset.toggleActive);
+  }
+}
+
+// Converts a stored phone number into the digits-only format wa.me
+// expects, assuming a 10-digit number is Indian and needs the 91 prefix.
+function getWhatsappNumber(phone) {
+  const digits = (phone || '').replace(/\D/g, '');
+  return digits.length === 10 ? `91${digits}` : digits;
+}
+
+function buildOverdueReminderMessage(customer) {
+  const companyName = settings.companyName || defaultSettings.companyName;
+  const balance = getDueAmount(customer);
+  return (
+    `${companyName}\n` +
+    `Dear ${customer.name},\n` +
+    `Total Balance: ${formatCurrency(balance)}\n` +
+    `దయచేసి మీరు చెల్లించవలసిన Due Amount ను తేదీ 15 లోగా మీ Cable TV Operator వద్ద చెల్లించవలసిందిగా కోరుచున్నాము. లేకపోతే మీ బాక్స్ డీయాక్టివేట్ అవుతుంది.\n` +
+    `ఇట్లు,\n` +
+    `GTPL`
+  );
+}
+
+// Opens WhatsApp or the SMS app with a pre-filled overdue reminder for
+// one customer. If they don't have WhatsApp, use the SMS button instead
+// — still requires a tap to actually send (see the note in
+// showPaymentReceipt about why a silent, tap-free send isn't possible
+// from a web app).
+function sendOverdueReminder(customerId, channel) {
+  const customer = getCustomerById(customerId);
+  if (!customer || !customer.phone) return;
+
+  const message = buildOverdueReminderMessage(customer);
+  const phoneDigits = customer.phone.replace(/\D/g, '');
+
+  if (channel === 'sms') {
+    window.open(`sms:${phoneDigits}?body=${encodeURIComponent(message)}`, '_self');
+  } else {
+    const whatsappNumber = phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits;
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  }
+
+  // Remember which month we reminded them, so the "Send Reminders" list
+  // hides them for the rest of this month and shows them again once a
+  // new month starts (if they're still overdue then).
+  customer.lastReminded = currentMonthKey();
+  saveCustomers();
+  renderTable();
+}
+
+// "YYYY-MM" for the current calendar month — used only to track when a
+// reminder was last sent, separate from the billing due-day logic.
+function currentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function wasRemindedThisMonth(customer) {
+  return customer.lastReminded === currentMonthKey();
+}
+
+function toggleHeaderMenu() {
+  const menu = document.getElementById('headerMenu');
+  menu.hidden = !menu.hidden;
+  if (!menu.hidden) {
+    setTimeout(() => {
+      document.addEventListener('click', closeMenuOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+function closeMenuOnOutside(e) {
+  const menu = document.getElementById('headerMenu');
+  const toggle = document.getElementById('btnMenuToggle');
+  if (!menu.contains(e.target) && !toggle.contains(e.target)) {
+    menu.hidden = true;
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function truncate(str, len) {
+  return str.length > len ? str.slice(0, len) + '…' : str;
+}
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+function openModal(modal) {
+  modal.showModal();
+}
+
+function closeModal(modal) {
+  modal.close();
+}
+
+function resetPhotoPreview(photo) {
+  pendingPhoto = photo !== undefined ? photo : null;
+  const preview = document.getElementById('photoPreview');
+  const removeBtn = document.getElementById('btnRemovePhoto');
+  document.getElementById('fieldPhoto').value = pendingPhoto || '';
+  document.getElementById('fieldPhotoFile').value = '';
+  document.getElementById('fieldPhotoFileCamera').value = '';
+
+  if (pendingPhoto) {
+    preview.innerHTML = `<img src="${pendingPhoto}" alt="Preview">`;
+    removeBtn.hidden = false;
+  } else {
+    preview.innerHTML = '<span class="photo-placeholder">No photo</span>';
+    removeBtn.hidden = true;
+  }
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add Customer';
+  document.getElementById('customerId').value = '';
+  document.getElementById('customerForm').reset();
+  document.getElementById('fieldMonthsPending').value = '1';
+  document.getElementById('fieldOtherCharge').value = '';
+  setActiveToggle(true);
+  resetPhotoPreview(null);
+  resetCustomerQrPreview(null);
+  resetCustomerQrPreview2(null);
+  openModal(document.getElementById('customerModal'));
+}
+
+function openEditModal(id) {
+  const customer = customers.find(c => c.id === id);
+  if (!customer) return;
+
+  document.getElementById('modalTitle').textContent = 'Edit Customer';
+  document.getElementById('customerId').value = customer.id;
+  document.getElementById('fieldBoxNumber').value = customer.boxNumber;
+  document.getElementById('fieldName').value = customer.name;
+  document.getElementById('fieldPhone').value = customer.phone;
+  document.getElementById('fieldAddress').value = customer.address;
+  document.getElementById('fieldMonthlyAmount').value = customer.monthlyAmount;
+  document.getElementById('fieldDueDay').value = customer.dueDay;
+  document.getElementById('fieldMonthsPending').value = customer.monthsPending;
+  document.getElementById('fieldLastPaid').value = isoToDMY(customer.lastPaid);
+  document.getElementById('fieldLastPaidAmount').value = typeof customer.lastPaidAmount === 'number' ? customer.lastPaidAmount : '';
+  document.getElementById('fieldOtherCharge').value = '';
+  setActiveToggle(customer.active !== false);
+  resetPhotoPreview(customer.photo || null);
+  resetCustomerQrPreview(customer.paytmQr || null);
+  resetCustomerQrPreview2(customer.paytmQr2 || null);
+  openModal(document.getElementById('customerModal'));
+}
+
+function openDetailModal(id) {
+  const customer = customers.find(c => c.id === id);
+  if (!customer) return;
+
+  selectedCustomerId = id;
+  const due = getDueAmount(customer);
+  const status = getStatus(customer);
+  const breakdown = getMonthBreakdown(customer);
+  const customerPayments = payments
+    .filter(p => p.customerId === id)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 6);
+
+  let breakdownHtml = '';
+  const detailOtherRow = getOtherChargeRow(customer);
+  if (breakdown.length > 0 || detailOtherRow) {
+    breakdownHtml = `
+      <div class="detail-breakdown">
+        <h3>Monthly Due Breakdown</h3>
+        ${breakdown.map(row => `
+          <div class="breakdown-row">
+            <span>${row.month} (Due: ${row.dueDate})</span>
+            <span class="mono">${formatCurrency(row.amount)}</span>
+          </div>
+        `).join('')}
+        ${detailOtherRow ? `
+          <div class="breakdown-row breakdown-row-other">
+            <span>${escapeHtml(detailOtherRow.label)}</span>
+            <span class="mono">${formatCurrency(detailOtherRow.amount)}</span>
+          </div>
+        ` : ''}
+        <div class="breakdown-row">
+          <span>Total Due</span>
+          <span class="mono">${formatCurrency(due)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  let paymentsHtml = '';
+  if (customerPayments.length > 0) {
+    paymentsHtml = `
+      <div class="detail-breakdown">
+        <h3>Recent Payments</h3>
+        ${customerPayments.map(p => `
+          <div class="breakdown-row">
+            <span>${formatDate(new Date(p.date))}${p.note ? ' — ' + escapeHtml(p.note) : ''}</span>
+            <span class="mono">${formatCurrency(p.amount)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-photo-wrap">${getCustomerPhotoHtml(customer, 'detail')}</div>
+      <div class="detail-item">
+        <span class="detail-label">Box Number</span>
+        <span class="detail-value mono box-number-link${customer.active === false ? ' card-box-number-off' : ''}" data-copy-box="${escapeHtml(customer.boxNumber)}">${escapeHtml(customer.boxNumber)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Status</span>
+        <span class="detail-value"><span class="badge badge-${status}">${getStatusLabel(status)}</span></span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Customer Name</span>
+        <span class="detail-value">${escapeHtml(customer.name)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Phone</span>
+        <span class="detail-value mono">${escapeHtml(customer.phone)}</span>
+      </div>
+      <div class="detail-item full">
+        <span class="detail-label">Address</span>
+        <span class="detail-value">${escapeHtml(customer.address)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Monthly Amount</span>
+        <span class="detail-value mono">${formatCurrency(customer.monthlyAmount)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Due Day (each month)</span>
+        <span class="detail-value">${customer.dueDay}${ordinal(customer.dueDay)} of every month</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Months Pending</span>
+        <span class="detail-value">${customer.monthsPending}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Last Paid</span>
+        <span class="detail-value">${customer.lastPaid ? formatDate(new Date(customer.lastPaid)) : '—'}</span>
+      </div>
+      <div class="detail-item full">
+        <span class="detail-label">Total Due Amount</span>
+        <span class="detail-value highlight">${formatCurrency(due)}</span>
+      </div>
+      ${breakdownHtml}
+      ${paymentsHtml}
+    </div>
+  `;
+
+  const paytmBar = document.getElementById('detailPaytmBar');
+  const detailQrList = getPaymentQrCodes(customer);
+  if (detailQrList.length > 0) {
+    paytmBar.hidden = false;
+    const qrImgs = detailQrList
+      .map(qr => `<img src="${qr}" alt="Payment QR code" class="detail-paytm-bar-img">`)
+      .join('');
+    const phoneHtml = settings.companyPhone
+      ? ` — <span class="mono">${escapeHtml(settings.companyPhone)}</span>`
+      : '';
+    const amountHtml = due > 0 ? ` <strong>${formatCurrency(due)}</strong>` : '';
+    paytmBar.innerHTML = `
+      ${qrImgs}
+      <span>Scan to pay${amountHtml}${phoneHtml} — tap QR to enlarge</span>
+    `;
+  } else {
+    paytmBar.hidden = true;
+    paytmBar.innerHTML = '';
+  }
+
+  openModal(document.getElementById('detailModal'));
+
+  // Keep the QR bar pinned just above the sticky footer, whatever its
+  // actual rendered height turns out to be (buttons can wrap on narrow screens).
+  requestAnimationFrame(() => {
+    const footer = document.querySelector('#detailModal .modal-footer');
+    const detailContent = document.querySelector('#detailModal .detail-content');
+    if (footer && detailContent) {
+      detailContent.style.setProperty('--footer-h', footer.offsetHeight + 'px');
+    }
+  });
+}
+
+function populatePaymentCustomers(preselectId) {
+  const select = document.getElementById('fieldPaymentCustomer');
+  select.innerHTML = customers.map(c =>
+    `<option value="${c.id}"${c.id === preselectId ? ' selected' : ''}>${escapeHtml(c.name)}</option>`
+  ).join('');
+}
+
+// ===== Mini calculator (Record Payment modal) =====
+let calcExpr = '';
+
+function resetCalcMini() {
+  calcExpr = '';
+  const display = document.getElementById('calcDisplay');
+  if (display) display.value = '0';
+  const panel = document.getElementById('calcMini');
+  if (panel) panel.classList.add('hidden');
+}
+
+function resetRecentPayPanel() {
+  const panel = document.getElementById('recentPayPanel');
+  if (panel) panel.classList.add('hidden');
+}
+
+// Returns a customer's payments (newest first) each carrying a balanceAfter
+// value: real ones use the stored snapshot; older records made before that
+// snapshot existed get an estimated value worked out backwards from the
+// customer's current balance (ignores mid-period accruals/charges, so treat
+// estimates as approximate, not exact).
+function getPaymentsWithBalances(customerId) {
+  const customer = getCustomerById(customerId);
+  const list = payments
+    .filter(p => p.customerId === customerId)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  let cumulative = customer ? customer.balanceDue : null;
+  return list.map(p => {
+    let balanceAfter = p.balanceAfter;
+    if (typeof balanceAfter !== 'number' && typeof cumulative === 'number') {
+      balanceAfter = cumulative;
+    }
+    if (typeof balanceAfter === 'number') {
+      cumulative = balanceAfter + Number(p.amount);
+    }
+    return { ...p, balanceAfter, estimated: typeof p.balanceAfter !== 'number' };
+  });
+}
+
+// Shows the selected customer's payments from the last 1 year 6 months —
+// only inside the Pay modal (kept out of the customer search cards).
+function renderRecentPayPanel() {
+  const panel = document.getElementById('recentPayPanel');
+  if (!panel) return;
+  const customerId = document.getElementById('fieldPaymentCustomer').value;
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 18);
+
+  const recent = getPaymentsWithBalances(customerId).filter(p => new Date(p.date) >= cutoff);
+
+  if (recent.length === 0) {
+    panel.innerHTML = '<div class="recent-pay-empty">No payments in the last 1 year 6 months.</div>';
+    return;
+  }
+
+  panel.innerHTML = recent.map(p => `
+    <div class="recent-pay-row">
+      <span class="recent-pay-date">${formatDate(new Date(p.date))}</span>
+      <span class="recent-pay-amount-group">
+        <span class="mono">${formatCurrency(p.amount)}</span>
+        <span class="recent-pay-balance">${typeof p.balanceAfter === 'number' ? 'Bal ' + formatCurrency(p.balanceAfter) + (p.estimated ? '*' : '') : '—'}</span>
+      </span>
+      <button type="button" class="recent-pay-delete" data-delete-recent-pay="${p.id}" aria-label="Delete payment">🗑</button>
+    </div>
+  `).join('');
+}
+
+function handleCalcButton(key) {
+  const display = document.getElementById('calcDisplay');
+  if (key === 'C') {
+    calcExpr = '';
+    display.value = '0';
+    return;
+  }
+  if (key === 'back') {
+    calcExpr = calcExpr.slice(0, -1);
+    display.value = calcExpr || '0';
+    return;
+  }
+  if (key === '=') {
+    try {
+      // Only digits, ., and + - * / are ever placed into calcExpr, so this is safe to evaluate.
+      if (!/^[0-9+\-*/.]*$/.test(calcExpr) || calcExpr === '') return;
+      const result = Function('"use strict"; return (' + calcExpr + ')')();
+      if (typeof result !== 'number' || !isFinite(result)) {
+        display.value = 'Error';
+        calcExpr = '';
+        return;
+      }
+      const rounded = Math.round(result * 100) / 100;
+      calcExpr = String(rounded);
+      display.value = calcExpr;
+    } catch (err) {
+      display.value = 'Error';
+      calcExpr = '';
+    }
+    return;
+  }
+  // digits, '.', and operators + - * /
+  const isOperator = ['+', '-', '*', '/'].includes(key);
+  const lastChar = calcExpr.slice(-1);
+  if (isOperator && (calcExpr === '' && key !== '-')) return; // no leading operator except minus
+  if (isOperator && ['+', '-', '*', '/'].includes(lastChar)) {
+    calcExpr = calcExpr.slice(0, -1) + key; // replace last operator
+  } else {
+    calcExpr += key;
+  }
+  display.value = calcExpr;
+}
+
+function updatePaymentSummary() {
+  const customer = getCustomerById(document.getElementById('fieldPaymentCustomer').value);
+  const dueOnly = customer ? getMonthlyPortionDue(customer) : 0;
+  const otherCharges = customer ? getOtherChargeAmount(customer) : 0;
+  const totalDue = dueOnly + otherCharges;
+
+  const boxNumberEl = document.getElementById('paymentBoxNumber');
+  boxNumberEl.textContent = customer ? `(${customer.boxNumber})` : '—';
+  boxNumberEl.dataset.copyBox = customer ? customer.boxNumber : '';
+
+  const phoneEl = document.getElementById('paymentCustomerPhone');
+  phoneEl.textContent = customer ? `(${customer.phone})` : '—';
+  phoneEl.href = customer ? `tel:${customer.phone}` : 'tel:';
+  document.getElementById('paymentDueAmount').textContent = formatCurrency(dueOnly);
+  document.getElementById('paymentBalanceAmount').textContent = formatCurrency(otherCharges);
+  document.getElementById('paymentTotalAmount').textContent = formatCurrency(totalDue);
+  renderPaymentQrBar(totalDue, customer);
+  renderRecentPayPanel();
+}
+
+function getPaymentQrCodes(customer) {
+  const qr1 = (customer && customer.paytmQr) || settings.paytmQr || null;
+  const qr2 = (customer && customer.paytmQr2) || settings.paytmQr2 || null;
+  return [qr1, qr2].filter(Boolean);
+}
+
+function renderPaymentQrBar(amountDue, customer) {
+  const qrBar = document.getElementById('paymentQrBar');
+  const qrList = getPaymentQrCodes(customer);
+  if (qrList.length > 0) {
+    qrBar.hidden = false;
+    const qrImgs = qrList
+      .map(qr => `<img src="${qr}" alt="Payment QR code" class="detail-paytm-bar-img">`)
+      .join('');
+    const phoneHtml = settings.companyPhone
+      ? ` — <span class="mono">${escapeHtml(settings.companyPhone)}</span>`
+      : '';
+    const amountHtml = amountDue > 0 ? ` <strong>${formatCurrency(amountDue)}</strong>` : '';
+    qrBar.innerHTML = `
+      ${qrImgs}
+      <span>Scan to pay${amountHtml}${phoneHtml} — tap QR to enlarge</span>
+    `;
+  } else {
+    qrBar.hidden = true;
+    qrBar.innerHTML = '';
+  }
+}
+
+function openPaymentModal(preselectId) {
+  populatePaymentCustomers(preselectId || selectedCustomerId || (customers[0]?.id));
+  const customer = getCustomerById(document.getElementById('fieldPaymentCustomer').value);
+  document.getElementById('fieldPaymentAmount').value = (customer && getDueAmount(customer) > 0) ? getDueAmount(customer) : '';
+  document.getElementById('fieldPaymentDate').value = isoToDMY(new Date().toISOString().split('T')[0]);
+  document.getElementById('fieldPaymentNote').value = customer ? getLastNoteForCustomer(customer.id) : '';
+  populatePaymentNoteHistory();
+  updatePaymentCustomerPreview(customer);
+  updatePaymentSummary();
+  resetCalcMini();
+  resetRecentPayPanel();
+  openModal(document.getElementById('paymentModal'));
+}
+
+function updatePaymentCustomerPreview(customer) {
+  const box = document.getElementById('paymentCustomerPreview');
+  const dateField = document.getElementById('fieldPaymentLastPaidDate');
+  const amountText = document.getElementById('paymentLastPaidAmount');
+  const balanceText = document.getElementById('paymentLastPaidBalance');
+  const remindRow = document.getElementById('paymentRemindRow');
+  if (!customer) {
+    box.innerHTML = '';
+    dateField.value = '';
+    amountText.textContent = '—';
+    balanceText.textContent = '—';
+    remindRow.hidden = true;
+    return;
+  }
+  box.innerHTML = `
+    ${getCustomerPhotoHtml(customer, 'payment')}
+    <span class="payment-customer-preview-name">${escapeHtml(customer.name)}</span>
+  `;
+
+  const lastPayment = payments
+    .filter(p => p.customerId === customer.id)
+    .sort((a, b) => (a.id < b.id ? 1 : -1))[0];
+
+  const lastPaidDate = customer.lastPaid || (lastPayment ? lastPayment.date : '');
+  dateField.value = lastPaidDate ? isoToDMY(lastPaidDate) : '';
+
+  const displayAmount = typeof customer.lastPaidAmount === 'number' ? customer.lastPaidAmount : (lastPayment ? lastPayment.amount : null);
+  amountText.textContent = displayAmount !== null ? formatCurrency(displayAmount) : '—';
+  balanceText.textContent = `(B ${formatCurrency(getOtherChargeAmount(customer))})`;
+
+  if (getDueAmount(customer) > 0 && customer.phone) {
+    const reminderMessage = buildOverdueReminderMessage(customer);
+    const phoneDigits = customer.phone.replace(/\D/g, '');
+    document.getElementById('btnPaymentRemindWhatsapp').onclick = () => {
+      window.open(`https://wa.me/${getWhatsappNumber(customer.phone)}?text=${encodeURIComponent(reminderMessage)}`, '_blank', 'noopener');
+    };
+    document.getElementById('btnPaymentRemindSms').onclick = () => {
+      window.open(`sms:${phoneDigits}?body=${encodeURIComponent(reminderMessage)}`, '_self');
+    };
+    remindRow.hidden = false;
+  } else {
+    remindRow.hidden = true;
+  }
+}
+
+function savePaymentLastPaidDate() {
+  const customerId = document.getElementById('fieldPaymentCustomer').value;
+  const customer = getCustomerById(customerId);
+  if (!customer) return;
+
+  const raw = document.getElementById('fieldPaymentLastPaidDate').value.trim();
+  const iso = dmyToISO(raw);
+  if (raw && !iso) {
+    alert('Please enter the date as DD-MM-YYYY (e.g. 05-07-2026).');
+    return;
+  }
+
+  customer.lastPaid = iso || '';
+  saveCustomers();
+  renderTable();
+  updatePaymentCustomerPreview(customer);
+}
+
+// Builds the dropdown of previously-typed payment notes (most recent
+// first) so a note can be reused instantly instead of retyping it.
+function populatePaymentNoteHistory() {
+  const list = document.getElementById('paymentNoteHistory');
+  const seen = new Set();
+  const notes = [];
+  payments
+    .slice()
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .forEach(p => {
+      const n = (p.note || '').trim();
+      if (n && !seen.has(n)) {
+        seen.add(n);
+        notes.push(n);
+      }
+    });
+  list.innerHTML = notes.slice(0, 20).map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+}
+
+function recordPayment(customerId, amount, date, note) {
+  const paymentRecord = {
+    id: generateId(),
+    customerId,
+    amount: Number(amount),
+    date,
+    note: note || ''
+  };
+
+  const customer = getCustomerById(customerId);
+  if (customer) {
+    // Pay off the Due Amount (monthly portion) first, then apply whatever's
+    // left over to reduce the Balance (other charge) — keeps the two rows accurate.
+    let remaining = Number(amount);
+    const monthlyBefore = getMonthlyPortionDue(customer);
+    const monthlyPaid = Math.min(monthlyBefore, remaining);
+    const monthlyAfter = monthlyBefore - monthlyPaid;
+    remaining -= monthlyPaid;
+
+    const otherBefore = getOtherChargeAmount(customer);
+    const otherAfter = Math.max(0, otherBefore - remaining);
+
+    customer.otherChargeAmount = otherAfter;
+    customer.balanceDue = monthlyAfter + otherAfter;
+    customer.monthsPending = computeMonthsPending(monthlyAfter, customer.monthlyAmount);
+    customer.lastPaid = date;
+    customer.lastAccrued = getDueRelevantMonthKey(customer.dueDay);
+    saveCustomers();
+    // Snapshot of what was left owing right after this payment, so the
+    // Recent Pay list can show it later without recomputing history.
+    paymentRecord.balanceAfter = customer.balanceDue;
+  }
+
+  payments.push(paymentRecord);
+  savePayments();
+
+  renderCollections();
+  renderTable();
+  updateSummary();
+}
+
+async function saveCustomer(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('customerId').value;
+  const existing = id ? customers.find(c => c.id === id) : null;
+  const isActive = document.getElementById('fieldActive').checked;
+
+  const lastPaidRaw = document.getElementById('fieldLastPaid').value.trim();
+  const lastPaidISO = dmyToISO(lastPaidRaw);
+  if (lastPaidRaw && !lastPaidISO) {
+    alert('Please enter Last Paid Date as DD-MM-YYYY (e.g. 05-07-2026).');
+    return;
+  }
+
+  const data = {
+    boxNumber: document.getElementById('fieldBoxNumber').value.trim(),
+    name: document.getElementById('fieldName').value.trim(),
+    phone: document.getElementById('fieldPhone').value.trim(),
+    address: document.getElementById('fieldAddress').value.trim(),
+    monthlyAmount: Number(document.getElementById('fieldMonthlyAmount').value),
+    dueDay: Number(document.getElementById('fieldDueDay').value),
+    monthsPending: Number(document.getElementById('fieldMonthsPending').value),
+    lastPaid: lastPaidISO,
+    lastPaidAmount: document.getElementById('fieldLastPaidAmount').value === '' ? null : Number(document.getElementById('fieldLastPaidAmount').value),
+    photo: pendingPhoto,
+    paytmQr: pendingCustomerQr,
+    paytmQr2: pendingCustomerQr2,
+    active: isActive,
+    lastAccrued: getDueRelevantMonthKey(Number(document.getElementById('fieldDueDay').value))
+  };
+
+  // "monthlyPortion" is the slice of the due that comes purely from
+  // monthlyAmount x monthsPending. It's tracked apart from Other Charge so
+  // the two always show as separate, correctly-labeled rows.
+  let monthlyPortion;
+  if (isActive) {
+    if (existing && data.monthsPending === existing.monthsPending) {
+      // Months Pending wasn't touched -- this save is just an amount/detail
+      // edit, so keep the already-accrued balance exactly as it was. Saving
+      // a new monthly amount here only changes the RATE used for future
+      // months; it does not rewrite what's already due.
+      monthlyPortion = getMonthlyPortionDue(existing);
+    } else {
+      // Months Pending WAS changed -- treat this as a deliberate manual
+      // correction and recompute the monthly portion at the (possibly new)
+      // rate for the (possibly new) number of months.
+      monthlyPortion = data.monthlyAmount * data.monthsPending;
+    }
+  } else {
+    // Box is OFF: don't add the monthly amount to their bill. Freeze the
+    // monthly portion at whatever it already was, and ignore whatever was
+    // typed into Months Pending for billing purposes.
+    monthlyPortion = existing ? getMonthlyPortionDue(existing) : 0;
+    data.monthsPending = existing ? existing.monthsPending : 0;
+  }
+
+  // One-time "Other Charge": only added to the due amount when the owner
+  // actually types a value in this field during this save. It is never
+  // stored back into the field, so it will NOT be added again on the next
+  // edit/save unless the owner enters a new amount. This still applies even
+  // if the box is OFF (e.g. a one-off repair charge). It accumulates in its
+  // own balance (otherChargeAmount) instead of being folded into
+  // monthsPending, so it renders as its own labeled row wherever the due
+  // breakdown is shown, instead of disguising itself as an extra month.
+  const otherCharge = Number(document.getElementById('fieldOtherCharge').value) || 0;
+  const existingOtherCharge = existing ? getOtherChargeAmount(existing) : 0;
+  data.otherChargeAmount = existingOtherCharge + (otherCharge > 0 ? otherCharge : 0);
+
+  // If the owner has changed the Monthly Amount to a new value on this save
+  // (an existing customer, box still ON), add that new monthly amount in
+  // full straight into the current due balance -- like an instant extra
+  // charge -- so it shows up immediately in the Pay / Record Payment due
+  // amount, instead of only affecting future months' accrual.
+  let monthlyRateChangeAddition = 0;
+  if (existing && isActive && data.monthlyAmount !== existing.monthlyAmount) {
+    monthlyRateChangeAddition = data.monthlyAmount;
+  }
+
+  data.balanceDue = monthlyPortion + monthlyRateChangeAddition + data.otherChargeAmount;
+
+  const duplicate = customers.find(c =>
+    c.boxNumber.toLowerCase() === data.boxNumber.toLowerCase() && c.id !== id
+  );
+  if (duplicate) {
+    alert('A customer with this box number already exists.');
+    return;
+  }
+
+  if (id) {
+    const idx = customers.findIndex(c => c.id === id);
+    if (idx !== -1) customers[idx] = { ...customers[idx], ...data };
+  } else {
+    customers.push({ id: generateId(), ...data });
+  }
+
+  saveCustomers();
+  document.getElementById('fieldOtherCharge').value = '';
+  closeModal(document.getElementById('customerModal'));
+  renderTable();
+}
+
+function deleteCustomer(id) {
+  const customer = customers.find(c => c.id === id);
+  if (!customer) return;
+  if (!confirm(`Delete customer ${customer.name} (${customer.boxNumber})?`)) return;
+
+  customers = customers.filter(c => c.id !== id);
+  saveCustomers();
+  renderTable();
+}
+
+function deletePayment(id) {
+  const payment = payments.find(p => p.id === id);
+  if (!payment) return;
+  if (!confirm('Delete this payment record? The amount will be added back to the customer\'s due balance.')) return;
+
+  payments = payments.filter(p => p.id !== id);
+  savePayments();
+
+  const customer = getCustomerById(payment.customerId);
+  if (customer) {
+    // Restore into the monthly portion (we don't track which portion a
+    // past payment originally covered).
+    const monthlyBefore = getMonthlyPortionDue(customer);
+    const monthlyAfter = monthlyBefore + Number(payment.amount);
+    customer.balanceDue = monthlyAfter + getOtherChargeAmount(customer);
+    customer.monthsPending = computeMonthsPending(monthlyAfter, customer.monthlyAmount);
+    saveCustomers();
+  }
+
+  renderCollections();
+  renderTable();
+  updateSummary();
+}
+
+function markAsPaid() {
+  if (!selectedCustomerId) return;
+  const customer = customers.find(c => c.id === selectedCustomerId);
+  if (!customer) return;
+
+  const due = getDueAmount(customer);
+  if (due > 0) {
+    const today = new Date().toISOString().split('T')[0];
+    recordPayment(customer.id, due, today, `Paid ${customer.monthsPending} month(s)`);
+  }
+
+  customer.balanceDue = 0;
+  customer.monthsPending = 0;
+  customer.otherChargeAmount = 0;
+  customer.lastPaid = new Date().toISOString().split('T')[0];
+  saveCustomers();
+  closeModal(document.getElementById('detailModal'));
+  renderTable();
+}
+
+async function savePayment(e) {
+  e.preventDefault();
+  const customerId = document.getElementById('fieldPaymentCustomer').value;
+  const amount = document.getElementById('fieldPaymentAmount').value;
+  const date = dmyToISO(document.getElementById('fieldPaymentDate').value);
+  const note = document.getElementById('fieldPaymentNote').value.trim();
+
+  if (!date) {
+    alert('Please enter Payment Date as DD-MM-YYYY (e.g. 05-07-2026).');
+    return;
+  }
+
+  if (!note) {
+    alert('Please enter a note before saving.');
+    return;
+  }
+
+  recordPayment(customerId, amount, date, note);
+  commitLastNoteForCustomer(customerId, note);
+  closeModal(document.getElementById('paymentModal'));
+  showPaymentReceipt(customerId, amount, date);
+}
+
+function showPaymentReceipt(customerId, amount, date) {
+  const customer = getCustomerById(customerId);
+  if (!customer) return;
+
+  const amountFormatted = formatCurrency(Number(amount));
+  const dateFormatted = formatDate(new Date(date));
+  const balance = getDueAmount(customer);
+  const companyName = settings.companyName || defaultSettings.companyName;
+
+  document.getElementById('receiptSummary').innerHTML = `
+    <strong>${escapeHtml(customer.name)}</strong> (Box: ${escapeHtml(customer.boxNumber)})<br>
+    Paid: <strong>${amountFormatted}</strong> on ${dateFormatted}<br>
+    Remaining Balance: ${formatCurrency(balance)}<br>
+    <span class="receipt-thankyou">Thank you Sir!</span>
+  `;
+
+  const message =
+    `${companyName}\n` +
+    `చెల్లింపు స్వీకరించబడింది\n` +
+    `కస్టమర్: ${customer.name}\n` +
+    `బాక్స్ నం: ${customer.boxNumber}\n` +
+    `చెల్లించిన మొత్తం: ${amountFormatted}\n` +
+    `తేదీ: ${dateFormatted}\n` +
+    `బాకీ: ${formatCurrency(balance)}\n` +
+    `ధన్యవాదాలు సార్!`;
+
+  sendReceiptMessage(customer, message);
+
+  const reminderRow = document.getElementById('receiptReminderRow');
+  if (balance > 0 && customer.phone) {
+    const reminderMessage = buildOverdueReminderMessage(customer);
+    const phoneDigits = customer.phone.replace(/\D/g, '');
+    document.getElementById('btnReceiptRemindWhatsapp').onclick = () => {
+      window.open(`https://wa.me/${getWhatsappNumber(customer.phone)}?text=${encodeURIComponent(reminderMessage)}`, '_blank', 'noopener');
+    };
+    document.getElementById('btnReceiptRemindSms').onclick = () => {
+      window.open(`sms:${phoneDigits}?body=${encodeURIComponent(reminderMessage)}`, '_self');
+    };
+    reminderRow.hidden = false;
+  } else {
+    reminderRow.hidden = true;
+  }
+
+  openModal(document.getElementById('receiptModal'));
+}
+
+function showOverdueWarning(customerId) {
+  const customer = getCustomerById(customerId);
+  if (!customer) return;
+
+  const balance = getDueAmount(customer);
+  const companyName = settings.companyName || defaultSettings.companyName;
+
+  document.getElementById('receiptSummary').innerHTML = `
+    <strong>${escapeHtml(customer.name)}</strong> (Box: ${escapeHtml(customer.boxNumber)})<br>
+    Overdue Balance: <strong>${formatCurrency(balance)}</strong><br>
+    <span class="receipt-thankyou">⚠️ Deactivation Warning</span>
+  `;
+
+  const message =
+    `${companyName}\n` +
+    `ముఖ్యమైన నోటీసు\n\n` +
+    `ప్రియమైన ${customer.name} గారు,\n` +
+    `మీ ఖాతాలో ${formatCurrency(balance)} బాకీ ఉంది.\n` +
+    `మీ బాక్స్ డీయాక్టివేట్ కాకుండా ఉండాలంటే వీలైనంత త్వరగా చెల్లించండి.\n\n` +
+    `బాక్స్ నం: ${customer.boxNumber}\n` +
+    `బాకీ మొత్తం: ${formatCurrency(balance)}\n\n` +
+    `ధన్యవాదాలు.`;
+
+  sendReceiptMessage(customer, message);
+  document.getElementById('receiptReminderRow').hidden = true;
+  openModal(document.getElementById('receiptModal'));
+}
+
+// Wires the WhatsApp/SMS buttons in the receipt modal to the given
+// message for the given customer, shared by both the payment receipt
+// and the overdue warning.
+function sendReceiptMessage(customer, message) {
+  const phoneDigits = (customer.phone || '').replace(/\D/g, '');
+  const whatsappBtn = document.getElementById('btnSendWhatsapp');
+  const smsBtn = document.getElementById('btnSendSms');
+  const actions = document.getElementById('receiptActions');
+  const noPhone = document.getElementById('receiptNoPhone');
+
+  if (phoneDigits) {
+    const whatsappNumber = phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits;
+    whatsappBtn.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    smsBtn.href = `sms:${phoneDigits}?body=${encodeURIComponent(message)}`;
+    actions.hidden = false;
+    noPhone.hidden = true;
+  } else {
+    whatsappBtn.removeAttribute('href');
+    smsBtn.removeAttribute('href');
+    actions.hidden = true;
+    noPhone.hidden = false;
+  }
+}
+
+function openSettingsModal() {
+  document.getElementById('fieldCompanyName').value = settings.companyName;
+  document.getElementById('fieldCompanyTagline').value = settings.tagline;
+  document.getElementById('fieldCompanyIcon').value = settings.companyIcon;
+  document.getElementById('fieldCompanyPhone').value = settings.companyPhone || '';
+  resetPaytmQrPreview(settings.paytmQr || null);
+  resetPaytmQrPreview2(settings.paytmQr2 || null);
+  openModal(document.getElementById('settingsModal'));
+}
+
+function saveSettingsForm(e) {
+  e.preventDefault();
+  settings = {
+    companyName: document.getElementById('fieldCompanyName').value.trim() || defaultSettings.companyName,
+    tagline: document.getElementById('fieldCompanyTagline').value.trim() || defaultSettings.tagline,
+    companyIcon: document.getElementById('fieldCompanyIcon').value.trim() || defaultSettings.companyIcon,
+    companyPhone: document.getElementById('fieldCompanyPhone').value.trim(),
+    paytmQr: pendingPaytmQr,
+    paytmQr2: pendingPaytmQr2
+  };
+  saveSettings();
+  applySettings();
+  closeModal(document.getElementById('settingsModal'));
+}
+
+function resetPaytmQrPreview(qr) {
+  pendingPaytmQr = qr !== undefined ? qr : null;
+  const preview = document.getElementById('paytmQrPreview');
+  const removeBtn = document.getElementById('btnRemovePaytmQr');
+  document.getElementById('fieldPaytmQr').value = pendingPaytmQr || '';
+  document.getElementById('fieldPaytmQrFile').value = '';
+  document.getElementById('fieldPaytmQrFileCamera').value = '';
+
+  if (pendingPaytmQr) {
+    preview.innerHTML = `<img src="${pendingPaytmQr}" alt="QR code 1 preview">`;
+    removeBtn.hidden = false;
+  } else {
+    preview.innerHTML = '<span class="photo-placeholder">No QR code</span>';
+    removeBtn.hidden = true;
+  }
+}
+
+function resetPaytmQrPreview2(qr) {
+  pendingPaytmQr2 = qr !== undefined ? qr : null;
+  const preview = document.getElementById('paytmQrPreview2');
+  const removeBtn = document.getElementById('btnRemovePaytmQr2');
+  document.getElementById('fieldPaytmQr2').value = pendingPaytmQr2 || '';
+  document.getElementById('fieldPaytmQrFile2').value = '';
+  document.getElementById('fieldPaytmQrFileCamera2').value = '';
+
+  if (pendingPaytmQr2) {
+    preview.innerHTML = `<img src="${pendingPaytmQr2}" alt="QR code 2 preview">`;
+    removeBtn.hidden = false;
+  } else {
+    preview.innerHTML = '<span class="photo-placeholder">No QR code</span>';
+    removeBtn.hidden = true;
+  }
+}
+
+function resetCustomerQrPreview(qr) {
+  pendingCustomerQr = qr !== undefined ? qr : null;
+  const preview = document.getElementById('customerQrPreview');
+  const removeBtn = document.getElementById('btnRemoveCustomerQr');
+  document.getElementById('fieldCustomerQr').value = pendingCustomerQr || '';
+  document.getElementById('fieldCustomerQrFile').value = '';
+  document.getElementById('fieldCustomerQrFileCamera').value = '';
+
+  if (pendingCustomerQr) {
+    preview.innerHTML = `<img src="${pendingCustomerQr}" alt="Scanner 1 preview">`;
+    removeBtn.hidden = false;
+  } else {
+    preview.innerHTML = '<span class="photo-placeholder">No QR code</span>';
+    removeBtn.hidden = true;
+  }
+}
+
+function resetCustomerQrPreview2(qr) {
+  pendingCustomerQr2 = qr !== undefined ? qr : null;
+  const preview = document.getElementById('customerQrPreview2');
+  const removeBtn = document.getElementById('btnRemoveCustomerQr2');
+  document.getElementById('fieldCustomerQr2').value = pendingCustomerQr2 || '';
+  document.getElementById('fieldCustomerQrFile2').value = '';
+  document.getElementById('fieldCustomerQrFileCamera2').value = '';
+
+  if (pendingCustomerQr2) {
+    preview.innerHTML = `<img src="${pendingCustomerQr2}" alt="Scanner 2 preview">`;
+    removeBtn.hidden = false;
+  } else {
+    preview.innerHTML = '<span class="photo-placeholder">No QR code</span>';
+    removeBtn.hidden = true;
+  }
+}
+
+function setActiveToggle(isActive) {
+  const checkbox = document.getElementById('fieldActive');
+  const label = document.getElementById('fieldActiveLabel');
+  checkbox.checked = isActive;
+  label.textContent = isActive ? 'ON' : 'OFF';
+}
+
+async function toggleCustomerActive(id) {
+  const customer = customers.find(c => c.id === id);
+  if (!customer) return;
+  const turningOn = customer.active === false;
+  customer.active = customer.active === false ? true : false;
+  if (turningOn) {
+    // Box was OFF (no accrual happened) and is now ON again -- baseline the
+    // accrual clock to right now so the due amount / color refreshes
+    // correctly instead of showing stale data.
+    customer.lastAccrued = getDueRelevantMonthKey(customer.dueDay);
+    customer.offSince = null;
+  } else {
+    // Box just turned OFF — remember when, so long-disconnected customers
+    // with a balance can be tracked separately (Old Customer Balance).
+    customer.offSince = new Date().toISOString().split('T')[0];
+  }
+  await saveCustomers();
+  await accrueMonthlyDues();
+  renderTable();
+}
+
+function openQrLightbox(src) {
+  document.getElementById('qrLightboxImg').src = src;
+  document.getElementById('qrLightbox').showModal();
+}
+
+function closeQrLightbox() {
+  document.getElementById('qrLightbox').close();
+  document.getElementById('qrLightboxImg').src = '';
+}
+
+// Encodes a canvas as a JPEG data URL, progressively lowering quality until
+// it fits under maxBytes.
+function canvasToCompressedDataUrl(canvas, maxBytes, startQuality) {
+  let quality = startQuality;
+  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+  while (dataUrl.length * 0.75 > maxBytes && quality > 0.3) {
+    quality -= 0.1;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
+  return dataUrl;
+}
+
+// Draws an already-loaded image onto a canvas, scaled down so neither side
+// exceeds maxDimension.
+function drawImageScaledToCanvas(img, maxDimension) {
+  let { width, height } = img;
+  if (width > maxDimension || height > maxDimension) {
+    if (width >= height) {
+      height = Math.round(height * (maxDimension / width));
+      width = maxDimension;
+    } else {
+      width = Math.round(width * (maxDimension / height));
+      height = maxDimension;
+    }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+  return canvas;
+}
+
+function loadImageFromSrc(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not read image.'));
+    img.src = src;
+  });
+}
+
+// Resizes and re-encodes an uploaded image file so large photos/QR codes get
+// shrunk down automatically instead of being rejected. Returns a compressed
+// data URL (JPEG), progressively lowering quality until it fits maxBytes.
+function compressImageFile(file, maxDimension, maxBytes, startQuality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read file.'));
+    reader.onload = () => {
+      loadImageFromSrc(reader.result)
+        .then(img => {
+          const canvas = drawImageScaledToCanvas(img, maxDimension);
+          resolve(canvasToCompressedDataUrl(canvas, maxBytes, startQuality));
+        })
+        .catch(reject);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Sand colour used as the automatic background fill for customer photos.
+const CUSTOMER_PHOTO_BG_COLOR = '#E3C99A';
+
+// The background-removal model is fairly large (~40MB) and is only ever
+// needed if the owner uploads a customer photo, so it's loaded on demand
+// from a CDN the first time it's needed, then cached by the browser.
+let backgroundRemovalModulePromise = null;
+function loadBackgroundRemovalModule() {
+  if (!backgroundRemovalModulePromise) {
+    backgroundRemovalModulePromise = import('https://esm.sh/@imgly/background-removal@1.7.0');
+  }
+  return backgroundRemovalModulePromise;
+}
+
+// Shrinks a File down to a modest resolution and returns it as a Blob.
+// Background removal is much faster on a smaller image (inference time
+// scales with pixel count), so we downscale BEFORE handing it to the
+// model instead of feeding it the full camera-resolution original.
+function resizeFileToBlob(file, maxDimension) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read file.'));
+    reader.onload = () => {
+      loadImageFromSrc(reader.result)
+        .then(img => {
+          const canvas = drawImageScaledToCanvas(img, maxDimension);
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob);
+            else reject(new Error('Could not resize image.'));
+          }, 'image/jpeg', 0.9);
+        })
+        .catch(reject);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Cuts the person out of the uploaded photo and composites them onto a
+// solid sand-coloured background, then compresses the result.
+async function removeBackgroundAndFillSand(file, maxDimension, maxBytes) {
+  const mod = await loadBackgroundRemovalModule();
+  const removeBackground = mod.default || mod.removeBackground;
+  const smallInput = await resizeFileToBlob(file, 480);
+  const cutoutBlob = await removeBackground(smallInput);
+  const cutoutUrl = URL.createObjectURL(cutoutBlob);
+  try {
+    const cutoutImg = await loadImageFromSrc(cutoutUrl);
+    const canvas = drawImageScaledToCanvas(cutoutImg, maxDimension);
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = CUSTOMER_PHOTO_BG_COLOR;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return canvasToCompressedDataUrl(canvas, maxBytes, 0.85);
+  } finally {
+    URL.revokeObjectURL(cutoutUrl);
+  }
+}
+
+
+async function handleBrandLogoFile(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+  try {
+    const compressed = await compressImageFile(file, 300, 300000, 0.9);
+    settings.companyLogo = compressed;
+    await saveSettings();
+  } catch (err) {
+    alert('Could not process that image. Please try another.');
+  }
+}
+
+async function handlePaytmQrFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+  try {
+    const compressed = await compressImageFile(file, 900, 800000, 0.9);
+    resetPaytmQrPreview(compressed);
+  } catch (err) {
+    alert('Could not process that image. Please try another.');
+  }
+}
+
+async function handlePaytmQrFile2(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+  try {
+    const compressed = await compressImageFile(file, 900, 800000, 0.9);
+    resetPaytmQrPreview2(compressed);
+  } catch (err) {
+    alert('Could not process that image. Please try another.');
+  }
+}
+
+async function handleCustomerQrFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+  try {
+    const compressed = await compressImageFile(file, 900, 800000, 0.9);
+    resetCustomerQrPreview(compressed);
+  } catch (err) {
+    alert('Could not process that image. Please try another.');
+  }
+}
+
+async function handleCustomerQrFile2(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+  try {
+    const compressed = await compressImageFile(file, 900, 800000, 0.9);
+    resetCustomerQrPreview2(compressed);
+  } catch (err) {
+    alert('Could not process that image. Please try another.');
+  }
+}
+
+async function handlePhotoFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+
+  // Remember which customer this photo belongs to right now — editing an
+  // existing customer has an id already; adding a new one doesn't yet.
+  const jobCustomerId = document.getElementById('customerId').value || null;
+
+  // Show something usable immediately (plain compressed photo, no AI
+  // background removal yet) so the person isn't stuck waiting before they
+  // can save. The nicer background-removed version applies automatically
+  // once it's ready, even if they've already saved and moved on.
+  let quickPhoto;
+  try {
+    quickPhoto = await compressImageFile(file, 800, 500000, 0.8);
+  } catch (err) {
+    alert('Could not process that image. Please try another.');
+    return;
+  }
+
+  if (isPhotoJobStillRelevant(jobCustomerId)) {
+    resetPhotoPreview(quickPhoto);
+  } else if (jobCustomerId) {
+    applyPhotoToCustomer(jobCustomerId, quickPhoto);
+  }
+
+  // Background-removal runs in the background from here — not awaited by
+  // anything the person is looking at, so leaving the screen doesn't lose
+  // it. Whichever customer this photo belongs to gets the nicer version
+  // automatically once it's done.
+  removeBackgroundAndFillSand(file, 800, 500000)
+    .then(processedPhoto => {
+      if (isPhotoJobStillRelevant(jobCustomerId)) {
+        resetPhotoPreview(processedPhoto);
+      } else if (jobCustomerId) {
+        applyPhotoToCustomer(jobCustomerId, processedPhoto);
+      }
+      // A brand-new customer that's already been saved by the time this
+      // finishes has a real id now, but we had none to target — the
+      // quick photo they saved with stays as-is in that one case.
+    })
+    .catch(err => {
+      console.error('Background removal failed, keeping the plain photo:', err);
+    });
+}
+
+// True if the Add/Edit Customer form is still open for the same customer
+// (or the same new-customer session) that this photo was picked for.
+function isPhotoJobStillRelevant(jobCustomerId) {
+  const modal = document.getElementById('customerModal');
+  if (!modal.open) return false;
+  const currentId = document.getElementById('customerId').value || null;
+  return currentId === jobCustomerId;
+}
+
+async function applyPhotoToCustomer(customerId, photo) {
+  const customer = customers.find(c => c.id === customerId);
+  if (!customer) return;
+  customer.photo = photo;
+  await saveCustomers();
+  renderTable();
+}
+
+async function printAllDues() {
+  const filtered = filterCustomers(searchQuery);
+  const withDues = filtered.filter(c => getDueAmount(c) > 0);
+
+  if (withDues.length === 0) {
+    alert('No pending dues to print.');
+    return;
+  }
+
+  const total = withDues.reduce((sum, c) => sum + getDueAmount(c), 0);
+  const today = formatDate(new Date());
+
+  const rows = withDues.map(c => `
+    <tr>
+      <td>${escapeHtml(c.boxNumber)}</td>
+      <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.phone)}</td>
+      <td>${c.dueDay}${ordinal(c.dueDay)}</td>
+      <td>${formatCurrency(c.monthlyAmount)}</td>
+      <td>${c.monthsPending}</td>
+      <td>${formatCurrency(getDueAmount(c))}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('printArea').innerHTML = `
+    <div class="print-doc">
+      <h1>${escapeHtml(getCompanyName())}</h1>
+      <p class="print-meta">Due Details Report — Generated on ${today}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Box No.</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Due Day</th>
+            <th>Monthly Amt</th>
+            <th>Months</th>
+            <th>Total Due</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="print-total">
+        Grand Total Due: ${formatCurrency(total)} &nbsp;|&nbsp; Customers: ${withDues.length}
+      </div>
+    </div>
+  `;
+
+  await triggerPdf(`Due-Report-${fileSafe(today)}.pdf`);
+}
+
+async function printCollections() {
+  const showingAll = selectedCollectionMonth === 'all';
+  const monthPayments = showingAll
+    ? payments.slice().sort((a, b) => new Date(b.date) - new Date(a.date))
+    : getPaymentsForMonth(selectedCollectionMonth);
+  if (monthPayments.length === 0) {
+    alert('No collections to print for this month.');
+    return;
+  }
+
+  const total = showingAll
+    ? monthPayments.reduce((sum, p) => sum + p.amount, 0)
+    : getMonthTotal(selectedCollectionMonth);
+  const today = formatDate(new Date());
+  const monthLabel = showingAll ? 'All Months' : formatMonthLabel(selectedCollectionMonth);
+
+  const rows = monthPayments.map(p => {
+    const customer = getCustomerById(p.customerId);
+    return `
+      <tr>
+        <td>${formatDate(new Date(p.date))}</td>
+        <td>${customer ? escapeHtml(customer.boxNumber) : '—'}</td>
+        <td>${customer ? escapeHtml(customer.name) : 'Unknown'}</td>
+        <td>${escapeHtml(p.note || '—')}</td>
+        <td>${formatCurrency(p.amount)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('printArea').innerHTML = `
+    <div class="print-doc">
+      <h1>${escapeHtml(getCompanyName())}</h1>
+      <p class="print-meta">Collections Report — ${monthLabel} — Generated on ${today}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Box No.</th>
+            <th>Customer</th>
+            <th>Note</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="print-total">
+        Total Collected: ${formatCurrency(total)} &nbsp;|&nbsp; Payments: ${monthPayments.length}
+      </div>
+    </div>
+  `;
+
+  await triggerPdf(`Collections-${fileSafe(monthLabel)}.pdf`);
+}
+
+async function printSingleDue() {
+  if (!selectedCustomerId) return;
+  const customer = customers.find(c => c.id === selectedCustomerId);
+  if (!customer) return;
+
+  const due = getDueAmount(customer);
+  const breakdown = getMonthBreakdown(customer);
+  const today = formatDate(new Date());
+
+  let breakdownRows = breakdown.map(row => `
+    <div class="slip-row">
+      <span>${row.month}</span>
+      <span>${formatCurrency(row.amount)}</span>
+    </div>
+  `).join('');
+  const slipOtherRow = getOtherChargeRow(customer);
+  if (slipOtherRow) {
+    breakdownRows += `
+    <div class="slip-row">
+      <span>${escapeHtml(slipOtherRow.label)}</span>
+      <span>${formatCurrency(slipOtherRow.amount)}</span>
+    </div>
+  `;
+  }
+
+  const photoHtml = customer.photo
+    ? `<div style="text-align:center;margin-bottom:1rem"><img src="${customer.photo}" style="width:60px;height:60px;border-radius:50%;object-fit:cover"></div>`
+    : '';
+
+  const qrBlocks = getPaymentQrCodes(customer)
+    .map(qr => `<img src="${qr}" style="width:140px;height:140px;object-fit:contain;border:1px solid #999;margin:0 0.5rem">`)
+    .join('');
+  const phoneSlipHtml = settings.companyPhone
+    ? `<div style="font-size:0.8rem;margin-top:0.35rem">${escapeHtml(settings.companyPhone)}</div>`
+    : '';
+  const paytmSlipHtml = (qrBlocks && due > 0)
+    ? `<div style="text-align:center;margin-top:1rem">
+        <div style="font-size:0.85rem;margin-bottom:0.35rem">Scan to Pay</div>
+        ${qrBlocks}
+        ${phoneSlipHtml}
+      </div>`
+    : '';
+
+  document.getElementById('printArea').innerHTML = `
+    <div class="print-doc">
+      <div class="print-slip">
+        <h2>${escapeHtml(getCompanyName())} — Due Slip</h2>
+        ${photoHtml}
+        <div class="slip-row"><span>Date:</span><span>${today}</span></div>
+        <div class="slip-row"><span>Box No.:</span><span>${escapeHtml(customer.boxNumber)}</span></div>
+        <div class="slip-row"><span>Name:</span><span>${escapeHtml(customer.name)}</span></div>
+        <div class="slip-row"><span>Phone:</span><span>${escapeHtml(customer.phone)}</span></div>
+        <div class="slip-row"><span>Address:</span><span>${escapeHtml(customer.address)}</span></div>
+        <div class="slip-row"><span>Due Day:</span><span>${customer.dueDay}${ordinal(customer.dueDay)} of month</span></div>
+        <hr style="margin: 1rem 0; border: none; border-top: 1px dashed #999;">
+        ${breakdownRows || `<div class="slip-row"><span>No pending dues</span><span>${formatCurrency(0)}</span></div>`}
+        <div class="slip-total">
+          <span>Total Due</span>
+          <span>${formatCurrency(due)}</span>
+        </div>
+        ${paytmSlipHtml}
+      </div>
+    </div>
+  `;
+
+  await triggerPdf(`Due-Slip-${fileSafe(customer.boxNumber)}.pdf`);
+}
+
+function fileSafe(str) {
+  return String(str).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'document';
+}
+
+async function triggerPdf(filename) {
+  const printArea = document.getElementById('printArea');
+  printArea.hidden = false;
+  printArea.style.position = 'fixed';
+  printArea.style.left = '0';
+  printArea.style.top = '0';
+  printArea.style.width = '794px';
+  printArea.style.zIndex = '99999';
+  printArea.style.maxHeight = '100vh';
+  printArea.style.overflow = 'auto';
+
+  try {
+    if (!window.jspdf || !window.html2canvas) {
+      throw new Error('PDF library did not load. Check your internet connection and try again.');
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    // Give the browser a frame to actually paint the print area before
+    // html2canvas captures it — some mobile browsers return a blank
+    // capture if rasterization starts before the first paint.
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await doc.html(printArea, {
+      x: 24,
+      y: 24,
+      width: 547,
+      windowWidth: 794,
+      html2canvas: { scale: 0.75, useCORS: true, backgroundColor: '#ffffff' }
+    });
+
+    // jsPDF's built-in .save() uses a synthetic link click, which some
+    // mobile browsers silently ignore. Build the download ourselves from
+    // a Blob URL, which is more reliable, and fall back to opening the
+    // PDF in a new tab if the download click doesn't work either.
+    const blob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+    }, 30000);
+  } catch (err) {
+    console.error('PDF generation failed:', err);
+    alert('Could not generate PDF: ' + err.message);
+  } finally {
+    printArea.hidden = true;
+    printArea.style.position = '';
+    printArea.style.left = '';
+    printArea.style.top = '';
+    printArea.style.width = '';
+    printArea.style.zIndex = '';
+    printArea.style.maxHeight = '';
+    printArea.style.overflow = '';
+  }
+}
+
+function setupResponsiveMenu() {
+  const menu = document.getElementById('headerMenu');
+  if (window.innerWidth >= 1024) {
+    menu.hidden = false;
+  } else {
+    menu.hidden = true;
+  }
+}
+
+async function loadAppData() {
+  await Promise.all([loadSettings(), loadCustomers(), loadPayments(), loadPaymentNotes()]);
+  applySettings();
+  await accrueMonthlyDues();
+  selectedCollectionMonth = 'all';
+  setupResponsiveMenu();
+  renderTable();
+  renderCollections();
+  subscribeRealtime();
+
+  // Quietly start downloading the background-removal model now, while the
+  // owner is browsing, so it's already cached by the time they add a photo
+  // instead of making them wait for it then.
+  const preload = () => loadBackgroundRemovalModule().catch(() => {});
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(preload, { timeout: 4000 });
+  } else {
+    setTimeout(preload, 1500);
+  }
+}
+
+let listenersAttached = false;
+function attachListeners() {
+  if (listenersAttached) return;
+  listenersAttached = true;
+
+  window.addEventListener('resize', setupResponsiveMenu);
+
+  // When the mobile keyboard opens, the on-screen input can end up hidden
+  // behind it. Nudge the focused field into view once the keyboard has
+  // finished animating in, so scrolling keeps working as expected.
+  document.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (el.matches('input, textarea, select') && el.closest('.modal-content')) {
+      setTimeout(() => {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 300);
+    }
+  });
+
+  attachDateMask(document.getElementById('fieldPaymentDate'));
+  attachDateMask(document.getElementById('fieldLastPaid'));
+  attachDateMask(document.getElementById('fieldPaymentLastPaidDate'));
+  document.getElementById('fieldPaymentLastPaidDate').addEventListener('blur', savePaymentLastPaidDate);
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    listMode = null;
+    searchQuery = e.target.value;
+    document.getElementById('searchClear').hidden = !searchQuery;
+    renderTable();
+  });
+
+  document.getElementById('searchInput').addEventListener('focus', () => {
+    searchFocused = true;
+    renderTable();
+  });
+
+  document.getElementById('searchInput').addEventListener('blur', () => {
+    if (!searchQuery) {
+      searchFocused = false;
+      renderTable();
+    }
+  });
+
+  document.getElementById('searchClear').addEventListener('click', () => {
+    listMode = null;
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchClear').hidden = true;
+    renderTable();
+  });
+
+  document.getElementById('statTotalDueCard').addEventListener('click', () => showListMode('topDue'));
+  document.getElementById('statOverdueCard').addEventListener('click', () => showListMode('overdueBalance'));
+  document.getElementById('statBoxOnCard').addEventListener('click', () => showListMode('boxOn'));
+  document.getElementById('statBoxOffCard').addEventListener('click', () => showListMode('boxOff'));
+  document.getElementById('statOverdueBalanceCard').addEventListener('click', () => showListMode('overdueBalance'));
+
+  document.getElementById('collectionMonth').addEventListener('change', (e) => {
+    selectedCollectionMonth = e.target.value;
+    renderCollections();
+  });
+
+  document.getElementById('btnAddCustomer').addEventListener('click', openAddModal);
+  document.getElementById('fabAddCustomer').addEventListener('click', openAddModal);
+  document.getElementById('btnAddFromEmpty').addEventListener('click', openAddModal);
+  document.getElementById('btnMenuToggle').addEventListener('click', toggleHeaderMenu);
+  document.getElementById('btnGoToCollections').addEventListener('click', () => {
+    if (window.innerWidth < 1024) {
+      document.getElementById('headerMenu').hidden = true;
+    }
+    renderCollections();
+    openModal(document.getElementById('collectionsModal'));
+  });
+  document.getElementById('collectionsModalClose').addEventListener('click', () => closeModal(document.getElementById('collectionsModal')));
+  document.getElementById('btnNotes').addEventListener('click', () => {
+    if (window.innerWidth < 1024) {
+      document.getElementById('headerMenu').hidden = true;
+    }
+    openNotesModal();
+  });
+  document.getElementById('notesClose').addEventListener('click', () => closeModal(document.getElementById('notesModal')));
+  document.getElementById('notesCancel').addEventListener('click', () => closeModal(document.getElementById('notesModal')));
+  document.getElementById('btnSaveNotes').addEventListener('click', saveNotes);
+  document.getElementById('collectionsOverdueCard').addEventListener('click', () => {
+    closeModal(document.getElementById('collectionsModal'));
+    showListMode('overdueBalance');
+  });
+  document.getElementById('collectionsBoxOffCard').addEventListener('click', () => {
+    closeModal(document.getElementById('collectionsModal'));
+    showListMode('boxOff');
+  });
+  document.getElementById('collectionsNotPaidCard').addEventListener('click', () => {
+    notPaidMonthTarget = selectedCollectionMonth === 'all' ? getCurrentMonthKey() : selectedCollectionMonth;
+    closeModal(document.getElementById('collectionsModal'));
+    showListMode('notPaidMonth');
+  });
+  document.getElementById('btnOldCustomerBalance').addEventListener('click', () => {
+    if (window.innerWidth < 1024) {
+      document.getElementById('headerMenu').hidden = true;
+    }
+    showListMode('oldCustomerBalance');
+  });
+  document.getElementById('btnSendReminders').addEventListener('click', () => {
+    if (window.innerWidth < 1024) {
+      document.getElementById('headerMenu').hidden = true;
+    }
+    showListMode('sendReminders');
+  });
+  document.getElementById('btnPrintCollections').addEventListener('click', printCollections);
+  document.getElementById('btnRecordCollection').addEventListener('click', () => openPaymentModal());
+  document.getElementById('btnSettings').addEventListener('click', openSettingsModal);
+  document.getElementById('btnPrivacy').addEventListener('click', openAccountModal);
+  document.getElementById('btnCancel').addEventListener('click', () => closeModal(document.getElementById('customerModal')));
+  document.getElementById('modalClose').addEventListener('click', () => closeModal(document.getElementById('customerModal')));
+  document.getElementById('detailClose').addEventListener('click', () => closeModal(document.getElementById('detailModal')));
+  document.getElementById('settingsClose').addEventListener('click', () => closeModal(document.getElementById('settingsModal')));
+  document.getElementById('btnSettingsCancel').addEventListener('click', () => closeModal(document.getElementById('settingsModal')));
+  document.getElementById('btnOpenAccount').addEventListener('click', openAccountModal);
+  document.getElementById('accountClose').addEventListener('click', () => closeModal(document.getElementById('accountModal')));
+  document.getElementById('btnAccountCancel').addEventListener('click', () => closeModal(document.getElementById('accountModal')));
+  document.getElementById('accountForm').addEventListener('submit', saveAccountForm);
+  document.getElementById('paymentClose').addEventListener('click', () => closeModal(document.getElementById('paymentModal')));
+  document.getElementById('receiptClose').addEventListener('click', () => closeModal(document.getElementById('receiptModal')));
+  document.getElementById('btnReceiptDone').addEventListener('click', () => closeModal(document.getElementById('receiptModal')));
+  document.getElementById('btnPaymentCancel').addEventListener('click', () => closeModal(document.getElementById('paymentModal')));
+  document.getElementById('customerForm').addEventListener('submit', saveCustomer);
+  document.getElementById('settingsForm').addEventListener('submit', saveSettingsForm);
+  document.getElementById('paymentForm').addEventListener('submit', savePayment);
+  document.getElementById('btnMarkPaid').addEventListener('click', markAsPaid);
+  document.getElementById('btnPrintSingle').addEventListener('click', printSingleDue);
+  document.getElementById('btnRecordPaymentDetail').addEventListener('click', () => openPaymentModal(selectedCustomerId));
+  document.getElementById('fieldPhotoFile').addEventListener('change', handlePhotoFile);
+  document.getElementById('fieldPhotoFileCamera').addEventListener('change', handlePhotoFile);
+  document.getElementById('fieldPaytmQrFile').addEventListener('change', handlePaytmQrFile);
+  document.getElementById('fieldPaytmQrFileCamera').addEventListener('change', handlePaytmQrFile);
+  document.getElementById('fieldPaytmQrFile2').addEventListener('change', handlePaytmQrFile2);
+  document.getElementById('fieldPaytmQrFileCamera2').addEventListener('change', handlePaytmQrFile2);
+  document.getElementById('fieldCustomerQrFile').addEventListener('change', handleCustomerQrFile);
+  document.getElementById('fieldCustomerQrFileCamera').addEventListener('change', handleCustomerQrFile);
+  document.getElementById('fieldCustomerQrFile2').addEventListener('change', handleCustomerQrFile2);
+  document.getElementById('fieldCustomerQrFileCamera2').addEventListener('change', handleCustomerQrFile2);
+  document.getElementById('btnRemovePaytmQr').addEventListener('click', () => resetPaytmQrPreview(null));
+  document.getElementById('btnRemovePaytmQr2').addEventListener('click', () => resetPaytmQrPreview2(null));
+  document.getElementById('btnRemoveCustomerQr').addEventListener('click', () => resetCustomerQrPreview(null));
+  document.getElementById('btnRemoveCustomerQr2').addEventListener('click', () => resetCustomerQrPreview2(null));
+  document.getElementById('btnRemovePhoto').addEventListener('click', () => resetPhotoPreview(null));
+  document.getElementById('fieldActive').addEventListener('change', (e) => setActiveToggle(e.target.checked));
+
+  document.getElementById('detailPaytmBar').addEventListener('click', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('detail-paytm-bar-img')) {
+      openQrLightbox(e.target.src);
+    }
+  });
+  document.getElementById('paymentQrBar').addEventListener('click', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('detail-paytm-bar-img')) {
+      openQrLightbox(e.target.src);
+    }
+  });
+  document.getElementById('homeQrBar').addEventListener('click', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('detail-paytm-bar-img')) {
+      openQrLightbox(e.target.src);
+    }
+  });
+  document.getElementById('qrLightboxClose').addEventListener('click', closeQrLightbox);
+  document.getElementById('qrLightbox').addEventListener('click', (e) => {
+    if (e.target.id === 'qrLightbox') closeQrLightbox();
+  });
+
+  document.getElementById('fieldPaymentCustomer').addEventListener('change', (e) => {
+    const customer = getCustomerById(e.target.value);
+    if (customer) {
+      document.getElementById('fieldPaymentAmount').value = getDueAmount(customer) > 0 ? getDueAmount(customer) : '';
+      document.getElementById('fieldPaymentNote').value = getLastNoteForCustomer(customer.id);
+    }
+    updatePaymentCustomerPreview(customer);
+    updatePaymentSummary();
+  });
+  document.getElementById('fieldPaymentAmount').addEventListener('input', updatePaymentSummary);
+  document.getElementById('btnToggleCalc').addEventListener('click', () => {
+    document.getElementById('calcMini').classList.toggle('hidden');
+  });
+  document.getElementById('btnToggleRecentPay').addEventListener('click', () => {
+    const panel = document.getElementById('recentPayPanel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) renderRecentPayPanel();
+  });
+  document.getElementById('recentPayPanel').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-delete-recent-pay]');
+    if (!btn) return;
+    deletePayment(btn.dataset.deleteRecentPay);
+    updatePaymentSummary();
+  });
+  document.getElementById('calcMini').addEventListener('click', (e) => {
+    const btn = e.target.closest('.calc-btn');
+    if (btn) handleCalcButton(btn.dataset.calc);
+  });
+  document.getElementById('calcDisplay').addEventListener('input', (e) => {
+    // Only allow digits, ., and + - * / when typing directly.
+    let cleaned = e.target.value.replace(/[^0-9+\-*/.]/g, '');
+    e.target.value = cleaned;
+    calcExpr = cleaned;
+  });
+  document.getElementById('calcDisplay').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCalcButton('=');
+    }
+  });
+  document.getElementById('btnCalcUseAmount').addEventListener('click', () => {
+    const val = document.getElementById('calcDisplay').value;
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      document.getElementById('fieldPaymentAmount').value = num;
+      updatePaymentSummary();
+    }
+  });
+  document.getElementById('fieldPaymentNote').addEventListener('input', (e) => {
+    const customerId = document.getElementById('fieldPaymentCustomer').value;
+    setLastNoteForCustomer(customerId, e.target.value);
+  });
+
+  document.getElementById('customerTableBody').addEventListener('click', handleCardActions);
+  document.getElementById('customerCards').addEventListener('click', handleCardActions);
+  document.getElementById('mobileCustomerCards').addEventListener('click', handleCardActions);
+
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-copy-box]');
+    if (!target) return;
+    const boxNumber = target.dataset.copyBox;
+    if (!boxNumber) return;
+    const copyFallback = () => {
+      const temp = document.createElement('textarea');
+      temp.value = boxNumber;
+      temp.style.position = 'fixed';
+      temp.style.opacity = '0';
+      document.body.appendChild(temp);
+      temp.select();
+      try { document.execCommand('copy'); } catch (err) { /* ignore */ }
+      document.body.removeChild(temp);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(boxNumber).catch(copyFallback);
+    } else {
+      copyFallback();
+    }
+    const original = target.textContent;
+    target.textContent = 'Copied!';
+    setTimeout(() => {
+      target.textContent = original;
+    }, 1000);
+  });
+
+  document.getElementById('collectionsTableBody').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-delete-payment]');
+    if (btn) deletePayment(btn.dataset.deletePayment);
+  });
+
+  document.getElementById('btnLogoutHeader').addEventListener('click', () => {
+    logoutUser();
+  });
+  document.getElementById('fieldBrandLogoFile').addEventListener('change', handleBrandLogoFile);
+}
+
+// ===== Auth flow =====
+// Simple shared login: accounts are stored (as hashed passwords) in your
+// Firestore database. Anyone with the right username/password sees the
+// same data, on any phone/device.
+// Session persistence: once signed in, you stay signed in on this device
+// for 12 hours (half a day), even if you close and reopen the app.
+// Tapping "Logout" ends the session immediately.
+let authMode = 'signin'; // or 'signup'
+let currentUser = null;
+
+const SESSION_KEY = 'cableNetworkSession';
+const SESSION_DURATION_MS = 5 * 60 * 60 * 1000; // 5 hours
+
+function saveSession(username) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      username,
+      expiresAt: Date.now() + SESSION_DURATION_MS
+    }));
+  } catch (err) {
+    // localStorage unavailable — session just won't persist across reloads
+  }
+}
+
+function getSavedSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (!session || !session.username || !session.expiresAt) return null;
+    if (Date.now() > session.expiresAt) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch (err) {
+    return null;
+  }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch (err) {
+    // ignore
+  }
+}
+
+function logoutUser() {
+  clearSession();
+  handleAuthedState(false);
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const title = document.getElementById('authTitle');
+  const sub = document.getElementById('authSub');
+  const submitBtn = document.getElementById('authSubmitBtn');
+  const toggle = document.getElementById('authToggleMode');
+  document.getElementById('authError').textContent = '';
+  if (mode === 'signup') {
+    title.textContent = 'Create account';
+    sub.textContent = 'Set up access to your team\'s customer data.';
+    submitBtn.textContent = 'Sign Up';
+    toggle.textContent = 'Already have an account? Sign in';
+  } else {
+    title.textContent = 'Sign in';
+    sub.textContent = 'Access your account to manage customers.';
+    submitBtn.textContent = 'Sign In';
+    toggle.textContent = 'Need an account? Sign up';
+  }
+}
+
+async function getUsers() {
+  return await storageGetJSON('users', []);
+}
+
+function openNotesModal() {
+  document.getElementById('fieldAppNotes').value = settings.appNotes || '';
+  openModal(document.getElementById('notesModal'));
+}
+
+async function saveNotes() {
+  settings.appNotes = document.getElementById('fieldAppNotes').value;
+  await saveSettings();
+  closeModal(document.getElementById('notesModal'));
+}
+
+function openAccountModal() {
+  document.getElementById('fieldCurrentPassword').value = '';
+  document.getElementById('fieldNewUsername').value = currentUser || '';
+  document.getElementById('fieldNewPassword').value = '';
+  document.getElementById('accountError').textContent = '';
+  openModal(document.getElementById('accountModal'));
+}
+
+async function saveAccountForm(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById('accountError');
+  errorEl.textContent = '';
+
+  const currentPassword = document.getElementById('fieldCurrentPassword').value;
+  const newUsername = document.getElementById('fieldNewUsername').value.trim().toLowerCase();
+  const newPassword = document.getElementById('fieldNewPassword').value;
+  const submitBtn = document.getElementById('accountSubmitBtn');
+  submitBtn.disabled = true;
+
+  try {
+    const users = await getUsers();
+    const idx = users.findIndex(u => u.username === currentUser);
+    if (idx === -1) throw new Error('Could not find your account. Please sign in again.');
+
+    const currentHash = await hashPassword(currentPassword);
+    if (users[idx].passwordHash !== currentHash) {
+      throw new Error('Current password is incorrect.');
+    }
+
+    if (newUsername && newUsername !== currentUser) {
+      if (users.some(u => u.username === newUsername)) {
+        throw new Error('That username is already taken.');
+      }
+      users[idx].username = newUsername;
+    }
+
+    if (newPassword) {
+      if (newPassword.length < 6) throw new Error('New password must be at least 6 characters.');
+      users[idx].passwordHash = await hashPassword(newPassword);
+    }
+
+    await storageSetJSON('users', users);
+    currentUser = users[idx].username;
+    saveSession(currentUser);
+    closeModal(document.getElementById('accountModal'));
+    alert('Your login details have been updated.');
+  } catch (err) {
+    errorEl.textContent = err.message || 'Something went wrong.';
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const username = document.getElementById('authEmail').value.trim().toLowerCase();
+  const password = document.getElementById('authPassword').value;
+  const errorEl = document.getElementById('authError');
+  errorEl.style.color = 'var(--danger)';
+  errorEl.textContent = '';
+
+  const submitBtn = document.getElementById('authSubmitBtn');
+  submitBtn.disabled = true;
+
+  try {
+    const users = await getUsers();
+    if (authMode === 'signup') {
+      if (users.some(u => u.username === username)) {
+        throw new Error('That username is already taken.');
+      }
+      if (password.length < 6) throw new Error('Password must be at least 6 characters.');
+      const passwordHash = await hashPassword(password);
+      users.push({ username, passwordHash });
+      await storageSetJSON('users', users);
+      currentUser = username;
+      saveSession(username);
+      await handleAuthedState(true);
+    } else {
+      const user = users.find(u => u.username === username);
+      const passwordHash = await hashPassword(password);
+      if (!user || user.passwordHash !== passwordHash) {
+        throw new Error('Incorrect username or password.');
+      }
+      currentUser = username;
+      saveSession(username);
+      await handleAuthedState(true);
+    }
+  } catch (err) {
+    errorEl.textContent = err.message || 'Something went wrong.';
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+async function handleAuthedState(isLoggedIn) {
+  document.getElementById('authLoading').hidden = true;
+  if (isLoggedIn) {
+    document.getElementById('authScreen').hidden = true;
+    document.getElementById('appRoot').hidden = false;
+    window.scrollTo(0, 0);
+    attachListeners();
+    await loadAppData();
+  } else {
+    unsubscribeRealtime();
+    currentUser = null;
+    document.getElementById('appRoot').hidden = true;
+    document.getElementById('authScreen').hidden = false;
+    window.scrollTo(0, 0);
+    document.getElementById('authForm').reset();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('authForm').addEventListener('submit', handleAuthSubmit);
+  document.getElementById('authToggleMode').addEventListener('click', () => {
+    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+  });
+  document.getElementById('btnToggleAuthPassword').addEventListener('click', () => {
+    const pwField = document.getElementById('authPassword');
+    const btn = document.getElementById('btnToggleAuthPassword');
+    const showing = pwField.type === 'text';
+    pwField.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  });
+
+  const savedSession = getSavedSession();
+  if (savedSession) {
+    currentUser = savedSession.username;
+    handleAuthedState(true);
+  } else {
+    handleAuthedState(false);
+  }
+});
+
+</script>
+</body>
+</html>
